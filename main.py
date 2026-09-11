@@ -1,12 +1,21 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from typing import Optional
 
-app = FastAPI()
+from db.database import engine, Base, create_tables
+from routers import users, auth
 
-@app.get("/")
-async def read_root():
-    return {"message": "Hello World"}
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_tables()
+    yield
+    await engine.dispose()
 
-@app.get("/greet")
-async def greet(age:int = 0, name: Optional[str] = "User") -> dict:
-    return {"message": f"Hello, {name}!", "age": age}
+app = FastAPI(
+    title="KnowledgeForge",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+app.include_router(users.router)
+app.include_router(auth.router)
