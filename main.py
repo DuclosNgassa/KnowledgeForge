@@ -8,6 +8,7 @@ from routers import users, auth
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await create_tables()
+    print("Database reset successfully.")
     yield
     await engine.dispose()
 

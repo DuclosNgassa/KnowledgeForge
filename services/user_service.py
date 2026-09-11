@@ -1,16 +1,19 @@
+import email
+from datetime import timedelta
+
 from fastapi import HTTPException, status
 
-from auth.utils import generate_passwd_hash
+from auth.utils import hash_password, verify_password, create_access_token
+from config import Config
 from models.user import User
 from repositories.user_repository import UserRepository
-from schemas.user import UserCreate
+from schemas.user import UserCreate, UserLogin
 
 
 class UserService:
 
     def __init__(self, repository: UserRepository):
         self.repository = repository
-
 
     async def get_user_by_email(self, email: str) -> User | None:
         existing_user = await self.repository.find_by_email(
@@ -32,10 +35,37 @@ class UserService:
         user_data_dict = user_data.model_dump()
         plain_password = user_data_dict.pop("password")
 
-        password_hash = generate_passwd_hash(plain_password)
+        print("plain_password: ", plain_password)
+        password_hash = hash_password(plain_password)
 
         new_user = User(
             **user_data_dict,
             password_hash=password_hash
         )
         return await self.repository.create_user(new_user)
+
+    async def login(self, user_data: UserLogin) -> dict[str, str] | None:
+        exists_user = await self.get_user_by_email(user_data.email)
+        if exists_user:
+            is_password_valid = verify_password(user_data.password, exists_user.password_hash)
+            if is_password_valid:
+                user_data = {
+                    "email": exists_user.email,
+                    "user_id": str(exists_user.id)
+                }
+
+                access_token = create_access_token(
+                    user_data=user_data,
+                    expiry=timedelta(days=Config.REFRESH_TOKEN_EXPIRATION)
+                )
+                refresh_token = create_access_token(
+                    user_data=user_data,
+                    refresh=True,
+                    expiry=timedelta(days=Config.REFRESH_TOKEN_EXPIRATION)
+                )
+
+                return {"access_token": access_token, "refresh_token": refresh_token}
+
+            return None  # TODO raise exception
+        else:
+            return None  # TODO raise exception

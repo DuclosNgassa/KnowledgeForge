@@ -9,6 +9,11 @@ class UserBase(BaseModel):
     email: EmailStr = Field(max_length=100)
 
 
+class UserLogin(BaseModel):
+    email:EmailStr
+    password: str
+
+
 # Schema for incoming registration request (requires plain password)
 class UserCreate(UserBase):
     password: str = Field(min_length=6, max_length=100)
