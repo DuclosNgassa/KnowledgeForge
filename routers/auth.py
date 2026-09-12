@@ -1,11 +1,12 @@
+from datetime import datetime
 from typing import Annotated
 
 from fastapi import APIRouter, status, Depends, HTTPException
 from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.database import get_db
-from repositories.user_repository import UserRepository
+from auth.dependencies import RefreshTokenBearer
+from auth.utils import create_access_token
+from dependencies import get_user_service
 from schemas.user import UserResponse, UserCreate, UserLogin
 from services.user_service import UserService
 
@@ -21,13 +22,15 @@ router = APIRouter(
              )
 async def create_user_account(
         user_data: UserCreate,
-        db: Annotated[AsyncSession, Depends(get_db)]
+        service: Annotated[UserService, Depends(get_user_service)]
 ) -> UserResponse:
-    repository = UserRepository(db)
-    service = UserService(repository)
     new_user = await service.create_user(user_data)
-    return UserResponse(id=new_user.id, username=new_user.username,
-                        email=new_user.email, created_at=new_user.created_at)
+    return UserResponse(
+        id=new_user.id,
+        username=new_user.username,
+        email=new_user.email,
+        created_at=new_user.created_at
+    )
 
 
 @router.post("/login",
@@ -35,9 +38,8 @@ async def create_user_account(
              status_code=status.HTTP_200_OK
              )
 async def login_user(user_data: UserLogin,
-                     db: Annotated[AsyncSession, Depends(get_db)]) -> JSONResponse:
-    repository = UserRepository(db)
-    service = UserService(repository)
+                     service: Annotated[UserService, Depends(get_user_service)]
+                     ) -> JSONResponse:
     token_dict = await service.login(user_data)
     print("token_dict", token_dict)
     if token_dict is not None:
@@ -47,6 +49,10 @@ async def login_user(user_data: UserLogin,
                 "status_code": status.HTTP_200_OK,
                 "access_token": token_dict["access_token"],
                 "refresh_token": token_dict["refresh_token"],
+                "user": {
+                    "email": token_dict["email"],
+                    "user_id": token_dict["user_id"],
+                }
             }
         )
     else:
@@ -54,3 +60,17 @@ async def login_user(user_data: UserLogin,
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid password or email"
         )
+
+
+@router.get("/refresh_token", )
+async def get_refresh_token(token_details: dict = Depends(RefreshTokenBearer())):
+    print("token_details", token_details)
+    expiry_timestamp = token_details["exp"]
+    if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
+        new_access_token = create_access_token(user_data=token_details["user"])
+        return JSONResponse(
+            content={
+                "access_token": new_access_token,
+            }
+        )
+    raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")

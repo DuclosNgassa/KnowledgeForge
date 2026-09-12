@@ -1,4 +1,3 @@
-import email
 from datetime import timedelta
 
 from fastapi import HTTPException, status
@@ -15,9 +14,9 @@ class UserService:
     def __init__(self, repository: UserRepository):
         self.repository = repository
 
-    async def get_user_by_email(self, email: str) -> User | None:
+    async def get_user_by_email(self, user_email: str) -> User | None:
         existing_user = await self.repository.find_by_email(
-            email
+            user_email
         )
 
         return existing_user
@@ -64,7 +63,12 @@ class UserService:
                     expiry=timedelta(days=Config.REFRESH_TOKEN_EXPIRATION)
                 )
 
-                return {"access_token": access_token, "refresh_token": refresh_token}
+                return {
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
+                    "email": exists_user.email,
+                    "user_id": str(exists_user.id)
+                }
 
             return None  # TODO raise exception
         else:

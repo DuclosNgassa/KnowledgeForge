@@ -1,10 +1,11 @@
-from fastapi import APIRouter, status, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import Session
 from typing import Annotated
-from db.database import get_db
-from repositories.user_repository import UserRepository
-from schemas.user import UserResponse, UserCreate
+
+from fastapi import APIRouter, status, Depends
+from pydantic import EmailStr
+
+from auth.dependencies import AccessTokenBearer
+from dependencies import get_user_service
+from schemas.user import UserResponse
 from services.user_service import UserService
 
 router = APIRouter(
@@ -12,13 +13,19 @@ router = APIRouter(
     tags=["Users"],
 )
 
-@router.post(
-    "/{user_id}",
+access_token_bearer = AccessTokenBearer()
+
+
+@router.get(
+    "/{email}",
     response_model=UserResponse,
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_200_OK,
 )
-def get_user_info(
-        user_id: str,
-        db: Annotated[AsyncSession, Depends(get_db)],
-):
-    pass
+async def get_user_info(
+        email: EmailStr,
+        service: Annotated[UserService, Depends(get_user_service)],
+        user_detail=Depends(access_token_bearer),
+) -> UserResponse:
+    print("user_detail: ", user_detail)
+    user = await service.get_user_by_email(email)
+    return UserResponse.model_validate(user)
