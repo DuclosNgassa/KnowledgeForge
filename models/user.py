@@ -1,10 +1,10 @@
 import uuid
-
-from sqlalchemy.dialects.postgresql.base import UUID
-from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, String, Boolean
+from sqlalchemy.dialects.postgresql.base import UUID
+from sqlalchemy.orm import Mapped, mapped_column
+
 from db.database import Base
 
 

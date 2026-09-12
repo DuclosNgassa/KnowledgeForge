@@ -3,6 +3,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, EmailStr
 
+
 # Base properties shared across schemas
 class UserBase(BaseModel):
     username: str = Field(min_length=2, max_length=100)
