@@ -1,11 +1,12 @@
-from fastapi import Request, HTTPException
+from fastapi import Request, HTTPException, status
 from fastapi.security import HTTPBearer
 
 from auth.utils import decode_token
+from db.redis import token_in_block_list
 
 
 def is_token_valid(token_data) -> bool:
-    return True if token_data is not None else False
+    return token_data is not None
 
 
 class TokenBearer(HTTPBearer):
@@ -17,7 +18,7 @@ class TokenBearer(HTTPBearer):
         creds = await super().__call__(request)
         if creds is None:
             raise HTTPException(
-                403,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail="Please provide an access token",
             )
         token = creds.credentials
@@ -25,8 +26,20 @@ class TokenBearer(HTTPBearer):
 
         if not is_token_valid(token_data):
             raise HTTPException(
-                401,
-                detail="Invalid or expired token",
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "error": "This token is invalid or has been revoked",
+                    "resolution": "Please login again."
+                },
+            )
+
+        if await token_in_block_list(token_data["jti"]):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "error": "This token is invalid or has been revoked",
+                    "resolution": "Please login again."
+                }
             )
 
         self.verify_token_data(token_data)
@@ -41,7 +54,7 @@ class AccessTokenBearer(TokenBearer):
     def verify_token_data(self, token_data: dict) -> None:
         if token_data and token_data['refresh']:
             raise HTTPException(
-                403,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail="Please provide an access token",
             )
 
@@ -50,6 +63,6 @@ class RefreshTokenBearer(TokenBearer):
     def verify_token_data(self, token_data: dict) -> None:
         if token_data and not token_data['refresh']:
             raise HTTPException(
-                403,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail="Please provide an refresh token",
             )

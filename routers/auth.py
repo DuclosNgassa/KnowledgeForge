@@ -4,8 +4,9 @@ from typing import Annotated
 from fastapi import APIRouter, status, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
-from auth.dependencies import RefreshTokenBearer
+from auth.dependencies import RefreshTokenBearer, AccessTokenBearer
 from auth.utils import create_access_token
+from db.redis import add_jti_to_block_list
 from dependencies import get_user_service
 from schemas.user import UserResponse, UserCreate, UserLogin
 from services.user_service import UserService
@@ -74,3 +75,13 @@ async def get_refresh_token(token_details: dict = Depends(RefreshTokenBearer()))
             }
         )
     raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")
+
+
+@router.get("/logout")
+async def logout(token_details: dict = Depends(AccessTokenBearer())):
+    jti = token_details["jti"]
+    await add_jti_to_block_list(jti)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "Successfully logged out"}
+    )
