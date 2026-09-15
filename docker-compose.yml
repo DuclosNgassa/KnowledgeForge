@@ -2,11 +2,11 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:16-alpine
-    container_name: postgres_db
+    image: pgvector/pgvector:pg16
+    container_name: knowledgeforge-postgres
     restart: always
     environment:
-      POSTGRES_USER: user
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: knowledgeforge
     ports:

@@ -79,6 +79,7 @@ async def get_refresh_token(token_details: dict = Depends(RefreshTokenBearer()))
 
 @router.get("/logout")
 async def logout(token_details: dict = Depends(AccessTokenBearer())):
+    print("token_details in auth/logout", token_details)
     jti = token_details["jti"]
     await add_jti_to_block_list(jti)
     return JSONResponse(

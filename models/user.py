@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, String, Boolean
 from sqlalchemy.dialects.postgresql.base import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.database import Base
 
@@ -27,6 +29,12 @@ class User(Base):
     username: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
+    )
+
+    knowledge_bases: Mapped[list["KnowledgeBase"]] = relationship(
+        "KnowledgeBase",
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
     created_at: Mapped[datetime] = mapped_column(
