@@ -13,7 +13,7 @@ from db.database import Base
 class User(Base):
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
@@ -29,6 +29,11 @@ class User(Base):
     username: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
+    )
+
+    documents: Mapped[list["Document"]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
     )
 
     knowledge_bases: Mapped[list["KnowledgeBase"]] = relationship(

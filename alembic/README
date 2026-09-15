@@ -2,7 +2,7 @@ Generic single-database configuration.
 
 ## To run a migration
 ```Powershell
-uv run alembic revision --autogenerate -m "update schema"
+uv run alembic revision --autogenerate -m "YOUR UPDATE SCHEMA MESSAGE"
 ```
 
 Then inspect the generated migration before running:

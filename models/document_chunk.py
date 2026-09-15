@@ -13,13 +13,13 @@ from db.database import Base
 class DocumentChunk(Base):
     __tablename__ = "document_chunks"
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
 
-    document_id: Mapped[uuid.UUID] = mapped_column(
+    document_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("documents.id"),
         nullable=False,
