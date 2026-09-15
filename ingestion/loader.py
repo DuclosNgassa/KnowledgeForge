@@ -1,11 +1,11 @@
 from pathlib import Path
 
+from ingestion.loaded_document import LoadedDocument
 from ingestion.loaders.markdown import MarkdownLoader
 from ingestion.loaders.pdf import PdfLoader
 from ingestion.loaders.text import TextLoader
 from ingestion.loaders.web import WebLoader
 from ingestion.loaders.word import WordLoader
-from ingestion.models import LoadedDocument
 
 
 class DocumentLoader:

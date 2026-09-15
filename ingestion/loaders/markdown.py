@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from ingestion.models import LoadedDocument
+from ingestion.document_type import DocumentType
+from ingestion.loaded_document import LoadedDocument
 
 
 class MarkdownLoader:
@@ -17,7 +18,7 @@ class MarkdownLoader:
                 content=content,
                 source=str(path),
                 metadata={
-                    "file_type": "markdown",
+                    "file_type": DocumentType.MARKDOWN,
                 },
             )
         ]

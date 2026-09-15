@@ -1,6 +1,7 @@
 from langchain_community.document_loaders import PyPDFLoader
 
-from ingestion.models import LoadedDocument
+from ingestion.document_type import DocumentType
+from ingestion.loaded_document import LoadedDocument
 
 
 class PdfLoader:
@@ -14,7 +15,7 @@ class PdfLoader:
                 source=file_path,
                 metadata={
                     **document.metadata,
-                    "file_type": "pdf",
+                    "file_type": DocumentType.PDF,
                 },
             )
             for document in documents

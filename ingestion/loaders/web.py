@@ -1,6 +1,7 @@
 from langchain_community.document_loaders import WebBaseLoader
 
-from ingestion.models import LoadedDocument
+from ingestion.document_type import DocumentType
+from ingestion.loaded_document import LoadedDocument
 
 
 class WebLoader:
@@ -15,7 +16,7 @@ class WebLoader:
                 source=url,
                 metadata={
                     **document.metadata,
-                    "file_type": "web",
+                    "file_type": DocumentType.WEB,
                     "url": url,
                 },
             )

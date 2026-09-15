@@ -1,6 +1,7 @@
 from pathlib import Path
 
-from ingestion.models import LoadedDocument
+from ingestion.document_type import DocumentType
+from ingestion.loaded_document import LoadedDocument
 
 
 class TextLoader:
@@ -16,7 +17,7 @@ class TextLoader:
                 content=content,
                 source=str(path),
                 metadata={
-                    "file_type": "txt",
+                    "file_type": DocumentType.TXT,
                 }
             )
         ]

@@ -1,6 +1,7 @@
 from langchain_community.document_loaders import Docx2txtLoader
 
-from ingestion.models import LoadedDocument
+from ingestion.document_type import DocumentType
+from ingestion.loaded_document import LoadedDocument
 
 
 class WordLoader:
@@ -15,7 +16,7 @@ class WordLoader:
                 source=file_path,
                 metadata={
                     **document.metadata,
-                    "file_type": "docx",
+                    "file_type": DocumentType.DOCX,
                 },
             )
             for document in documents
