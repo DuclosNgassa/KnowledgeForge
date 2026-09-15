@@ -6,7 +6,7 @@ from fastapi import HTTPException, status
 from models.knowledge_base import KnowledgeBase
 from repositories.knowledge_base_repository import KnowledgeBaseRepository
 from schemas.knowledge_base import KnowledgeBaseCreate, KnowledgeBaseUpdate, \
-    KnowledgeBaseListResponse
+    KnowledgeBaseListResponse, KnowledgeBaseResponse
 
 
 class KnowledgeBaseService:
@@ -36,6 +36,14 @@ class KnowledgeBaseService:
         )
 
         return await self.repository.create(knowledge_base)
+
+    async def find_by_id_and_user_id(self, knowledge_base_id: UUID, user_id: UUID) -> KnowledgeBaseResponse | None:
+        knowledge_base = await self.repository.find_by_id_and_user_id(knowledge_base_id, user_id)
+
+        if knowledge_base is not None:
+            return KnowledgeBaseResponse.model_validate(knowledge_base)
+        return None
+
 
     async def update_knowledge_base(self,
                                     knowledge_base_id: UUID,

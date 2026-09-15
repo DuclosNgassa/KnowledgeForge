@@ -41,6 +41,16 @@ class KnowledgeBaseRepository:
 
         return result.scalar_one_or_none()
 
+    async def find_by_id_and_user_id(self, knowledge_id: UUID, user_id: UUID) -> KnowledgeBase | None:
+        statement = select(KnowledgeBase).where(
+            KnowledgeBase.id == knowledge_id,
+            KnowledgeBase.user_id == user_id,
+        )
+
+        result = await self.db.execute(statement)
+
+        return result.scalar_one_or_none()
+
     async def find_all(self, user_id: UUID) -> list[KnowledgeBase]:
         statement = (select(KnowledgeBase)
                      .where(KnowledgeBase.user_id == user_id)

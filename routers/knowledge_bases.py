@@ -3,7 +3,7 @@ from typing import Annotated
 from uuid import UUID
 from fastapi.responses import JSONResponse
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, HTTPException
 
 from auth.dependencies import AccessTokenBearer
 from dependencies import get_knowledge_base_service, get_current_user_info
@@ -61,6 +61,28 @@ async def update_knowledge_base(
     )
 
     return KnowledgeBaseResponse.model_validate(result)
+
+
+@router.get(
+    "/{knowledge_base_id}",
+    response_model=KnowledgeBaseResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def find_by_id_and_user_id(
+        knowledge_base_id: uuid.UUID,
+        service: Annotated[KnowledgeBaseService, Depends(get_knowledge_base_service)],
+        user_detail: dict = Depends(get_current_user_info),
+) -> KnowledgeBaseResponse:
+    user_id = user_detail["user_id"]
+    response = await service.find_by_id_and_user_id(knowledge_base_id=knowledge_base_id,
+                                                    user_id=user_id)
+    if response is not None:
+        return response
+
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"There is no KnowledgeBase with id: {knowledge_base_id}.",
+    )
 
 
 @router.get(
