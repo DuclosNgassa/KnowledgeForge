@@ -1,0 +1,11 @@
+Generic single-database configuration.
+
+## To run a migration
+```Powershell
+uv run alembic revision --autogenerate -m "update schema"
+```
+
+Then inspect the generated migration before running:
+```Powershell
+uv run alembic upgrade head
+```

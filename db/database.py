@@ -3,8 +3,6 @@ from sqlalchemy.orm import DeclarativeBase
 
 from config import Config
 
-#DATABASE_URL = "postgresql+asyncpg://user:mypassword@localhost:5432/knowledgeforge"
-
 engine = create_async_engine(
     Config.DATABASE_URL,
     echo=True,
