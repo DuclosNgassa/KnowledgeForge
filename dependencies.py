@@ -1,3 +1,4 @@
+import uuid
 from typing import Annotated
 
 from fastapi import Depends
@@ -31,6 +32,6 @@ def get_current_user_info(
 ) -> dict:
     print("user_details in dependencies: ", user_details)
     return {
-        "email": user_details["email"],
-        "user_id": user_details["user_id"],
+        "email": user_details["user"]["email"],
+        "user_id": uuid.UUID(user_details["user"]["user_id"]),
     }
