@@ -38,6 +38,11 @@ class KnowledgeBase(Base):
         nullable=False,
     )
 
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True
+    )
+
     user: Mapped["User"] = relationship(
         "User",
         back_populates="knowledge_bases",

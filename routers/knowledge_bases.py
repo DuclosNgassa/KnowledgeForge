@@ -1,10 +1,11 @@
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
 from auth.dependencies import AccessTokenBearer
-from dependencies import get_knowledge_base_service
-from schemas.knowledge_base import KnowledgeBaseCreate, KnowledgeBaseResponse
+from dependencies import get_knowledge_base_service, get_current_user_info
+from schemas.knowledge_base import KnowledgeBaseCreate, KnowledgeBaseResponse, KnowledgeBaseUpdate
 from services.knowledge_base_service import KnowledgeBaseService
 
 router = APIRouter(
@@ -14,7 +15,7 @@ router = APIRouter(
 
 
 @router.post(
-    "/create",
+    "",
     response_model=KnowledgeBaseResponse,
     status_code=status.HTTP_201_CREATED,
 )
@@ -35,3 +36,25 @@ async def create_knowledge_base(
     )
 
     return KnowledgeBaseResponse.model_validate(knowledge_base)
+
+
+@router.put(
+    "/{knowledge_base_id}",
+    response_model=KnowledgeBaseResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def update_knowledge_base(
+        knowledge_base_id: uuid.UUID,
+        data: KnowledgeBaseUpdate,
+        service: Annotated[KnowledgeBaseService, Depends(get_knowledge_base_service)],
+        current_user_info: dict = Depends(get_current_user_info),
+) -> KnowledgeBaseResponse:
+    print("current_user_info in knowledge_base: ", current_user_info)
+    user_id = current_user_info["user_id"]
+    result = await service.update_knowledge_base(
+        knowledge_base_id=knowledge_base_id,
+        data=data,
+        user_id=user_id,
+    )
+
+    return KnowledgeBaseResponse.model_validate(result)

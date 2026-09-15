@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from auth.dependencies import AccessTokenBearer
 from db.database import get_db
 from repositories.knowledge_base_repository import KnowledgeBaseRepository
 from repositories.user_repository import UserRepository
@@ -23,3 +24,13 @@ def get_knowledge_base_service(
     repository = KnowledgeBaseRepository(db)
 
     return KnowledgeBaseService(repository)
+
+
+def get_current_user_info(
+        user_details: dict = Depends(AccessTokenBearer()),
+) -> dict:
+    print("user_details in dependencies: ", user_details)
+    return {
+        "email": user_details["email"],
+        "user_id": user_details["user_id"],
+    }
