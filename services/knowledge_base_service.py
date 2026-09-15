@@ -1,5 +1,5 @@
-import uuid
 from datetime import datetime
+from uuid import UUID
 
 from fastapi import HTTPException, status
 
@@ -17,7 +17,7 @@ class KnowledgeBaseService:
     async def create_knowledge_base(
             self,
             data: KnowledgeBaseCreate,
-            user_id: uuid.UUID,
+            user_id: UUID,
     ) -> KnowledgeBase:
         existing = await self.repository.find_by_name_and_user(
             name=data.name,
@@ -38,9 +38,9 @@ class KnowledgeBaseService:
         return await self.repository.create(knowledge_base)
 
     async def update_knowledge_base(self,
-                                    knowledge_base_id: uuid.UUID,
+                                    knowledge_base_id: UUID,
                                     data: KnowledgeBaseUpdate,
-                                    user_id: uuid.UUID) -> KnowledgeBase:
+                                    user_id: UUID) -> KnowledgeBase:
         knowledge_base_to_update = await self.repository.find_by_id(knowledge_base_id)
         if not knowledge_base_to_update:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KnowledgeBase not found")
@@ -62,9 +62,14 @@ class KnowledgeBaseService:
 
         return updated_knowledge_base
 
-    async def find_all(self, user_id: uuid.UUID) -> KnowledgeBaseListResponse:
+    async def find_all(self, user_id: UUID) -> KnowledgeBaseListResponse:
         knowledge_bases = await self.repository.find_all(user_id)
 
         return KnowledgeBaseListResponse(
             knowledge_bases=knowledge_bases
         )
+
+    async def delete(self, knowledge_base_id: UUID, user_id: UUID) -> None:
+        deleted = await self.repository.delete(knowledge_base_id, user_id)
+        if not deleted:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KnowledgeBase does not exist")

@@ -1,5 +1,7 @@
 import uuid
 from typing import Annotated
+from uuid import UUID
+from fastapi.responses import JSONResponse
 
 from fastapi import APIRouter, Depends, status
 
@@ -72,3 +74,22 @@ async def find_all(
 ) -> KnowledgeBaseListResponse:
     user_id = user_detail["user_id"]
     return await service.find_all(user_id)
+
+
+@router.delete(
+    "/{knowledge_base_id}",
+    response_model=str,
+    status_code=status.HTTP_200_OK)
+async def delete(knowledge_base_id: UUID,
+                 service: Annotated[KnowledgeBaseService, Depends(get_knowledge_base_service)],
+                 current_user_info: dict = Depends(get_current_user_info),
+                 ) -> JSONResponse:
+    user_id = current_user_info["user_id"]
+    await service.delete(knowledge_base_id=knowledge_base_id, user_id=user_id)
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "message": f"Knowledge Base deleted successfully. [id: {knowledge_base_id}]",
+        }
+    )
