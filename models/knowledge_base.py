@@ -14,7 +14,7 @@ from db.database import Base
 class KnowledgeBase(Base):
     __tablename__ = "knowledge_bases"
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
@@ -25,7 +25,7 @@ class KnowledgeBase(Base):
         nullable=False,
     )
 
-    user_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id"),
         nullable=False,
@@ -52,5 +52,4 @@ class KnowledgeBase(Base):
     documents: Mapped[list["Document"]] = relationship(
         "Document",
         back_populates="knowledge_base",
-        cascade="all,delete-orphan",
     )

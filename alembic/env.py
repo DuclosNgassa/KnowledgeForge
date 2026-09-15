@@ -27,6 +27,10 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 
+from models.user import User
+from models.document import Document
+from models.document_chunk import DocumentChunk
+from models.knowledge_base import KnowledgeBase
 target_metadata = Base.metadata
 
 

@@ -13,16 +13,25 @@ from db.database import Base
 class Document(Base):
     __tablename__ = "documents"
 
-    id: Mapped[uuid.UUID] = mapped_column(
+    id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
 
-    knowledge_base_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("knowledge_bases.id"),
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
+    )
+
+    user: Mapped["User"] = relationship(
+        back_populates="documents"
+    )
+
+    knowledge_base_id: Mapped[UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("knowledge_bases.id", ondelete="SET NULL"),
+        nullable=True,
         index=True,
     )
 
@@ -53,8 +62,7 @@ class Document(Base):
         nullable=False,
     )
 
-    knowledge_base: Mapped["KnowledgeBase"] = relationship(
-        "KnowledgeBase",
+    knowledge_base: Mapped["KnowledgeBase | None"] = relationship(
         back_populates="documents",
     )
 
