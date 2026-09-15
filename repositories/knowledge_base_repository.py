@@ -41,6 +41,18 @@ class KnowledgeBaseRepository:
 
         return result.scalar_one_or_none()
 
+    async def find_all(self, user_id: uuid.UUID) -> list[KnowledgeBase]:
+        statement = (select(KnowledgeBase)
+                     .where(KnowledgeBase.user_id == user_id)
+                     .order_by(KnowledgeBase.created_at.desc()))
+
+        result = await self.db.scalars(
+            statement
+        )
+
+        return list(result.all())
+
+
     async def update(self, knowledge_base: KnowledgeBase) -> KnowledgeBase:
         await self.db.commit()
         await self.db.refresh(knowledge_base)

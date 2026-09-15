@@ -5,7 +5,8 @@ from fastapi import HTTPException, status
 
 from models.knowledge_base import KnowledgeBase
 from repositories.knowledge_base_repository import KnowledgeBaseRepository
-from schemas.knowledge_base import KnowledgeBaseCreate, KnowledgeBaseUpdate
+from schemas.knowledge_base import KnowledgeBaseCreate, KnowledgeBaseUpdate, \
+    KnowledgeBaseListResponse
 
 
 class KnowledgeBaseService:
@@ -44,12 +45,6 @@ class KnowledgeBaseService:
         if not knowledge_base_to_update:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KnowledgeBase not found")
 
-        print("knowledge_base_to_update.user_id: ", knowledge_base_to_update.user_id)
-        print(type(knowledge_base_to_update.user_id))
-        print("---")
-        print("user_id: ", user_id)
-        print(type(user_id))
-
         if knowledge_base_to_update.user_id != user_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -66,3 +61,10 @@ class KnowledgeBaseService:
         updated_knowledge_base = await self.repository.update(knowledge_base_to_update)
 
         return updated_knowledge_base
+
+    async def find_all(self, user_id: uuid.UUID) -> KnowledgeBaseListResponse:
+        knowledge_bases = await self.repository.find_all(user_id)
+
+        return KnowledgeBaseListResponse(
+            knowledge_bases=knowledge_bases
+        )

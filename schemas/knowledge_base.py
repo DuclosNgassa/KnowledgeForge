@@ -34,3 +34,7 @@ class KnowledgeBaseResponse(BaseModel):
     model_config = {
         "from_attributes": True
     }
+
+
+class KnowledgeBaseListResponse(BaseModel):
+    knowledge_bases: list[KnowledgeBaseResponse]

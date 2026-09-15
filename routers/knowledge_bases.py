@@ -5,7 +5,8 @@ from fastapi import APIRouter, Depends, status
 
 from auth.dependencies import AccessTokenBearer
 from dependencies import get_knowledge_base_service, get_current_user_info
-from schemas.knowledge_base import KnowledgeBaseCreate, KnowledgeBaseResponse, KnowledgeBaseUpdate
+from schemas.knowledge_base import KnowledgeBaseCreate, KnowledgeBaseResponse, KnowledgeBaseUpdate, \
+    KnowledgeBaseListResponse
 from services.knowledge_base_service import KnowledgeBaseService
 
 router = APIRouter(
@@ -58,3 +59,16 @@ async def update_knowledge_base(
     )
 
     return KnowledgeBaseResponse.model_validate(result)
+
+
+@router.get(
+    "",
+    response_model=KnowledgeBaseListResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def find_all(
+        service: Annotated[KnowledgeBaseService, Depends(get_knowledge_base_service)],
+        user_detail: dict = Depends(get_current_user_info),
+) -> KnowledgeBaseListResponse:
+    user_id = user_detail["user_id"]
+    return await service.find_all(user_id)
