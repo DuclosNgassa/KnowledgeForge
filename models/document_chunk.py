@@ -50,7 +50,7 @@ class DocumentChunk(Base):
         default=dict,
     )
 
-    documents = relationship(
+    document: Mapped["Document"] = relationship(
         "Document",
         back_populates="chunks"
     )

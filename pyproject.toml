@@ -19,6 +19,7 @@ dependencies = [
     "colorama==0.4.6",
     "detect-installer==0.2.1",
     "dnspython==2.8.0",
+    "docx2txt>=0.9",
     "email-validator==2.3.0",
     "fastapi==0.141.1",
     "fastapi-cli==0.0.32",

@@ -6,8 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from auth.dependencies import AccessTokenBearer
 from db.database import get_db
+from repositories.document_repository import DocumentRepository
 from repositories.knowledge_base_repository import KnowledgeBaseRepository
 from repositories.user_repository import UserRepository
+from services.document_service import DocumentService
 from services.knowledge_base_service import KnowledgeBaseService
 from services.user_service import UserService
 
@@ -25,6 +27,13 @@ def get_knowledge_base_service(
     repository = KnowledgeBaseRepository(db)
 
     return KnowledgeBaseService(repository)
+
+
+def get_document_service(
+        db: Annotated[AsyncSession, Depends(get_db)],
+) -> DocumentService:
+    repository = DocumentRepository(db)
+    return DocumentService(repository)
 
 
 def get_current_user_info(

@@ -68,6 +68,6 @@ class Document(Base):
 
     chunks: Mapped[list["DocumentChunk"]] = relationship(
         "DocumentChunk",
-        back_populates="documents",
+        back_populates="document",
         cascade="all,delete-orphan",
     )

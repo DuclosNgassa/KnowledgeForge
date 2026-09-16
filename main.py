@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from db.database import engine, create_tables
-from routers import users, auth, knowledge_bases
+from routers import users, auth, knowledge_bases, document
 
 
 @asynccontextmanager
@@ -21,4 +21,5 @@ app = FastAPI(
 
 app.include_router(users.router)
 app.include_router(knowledge_bases.router)
+app.include_router(document.router)
 app.include_router(auth.router)
