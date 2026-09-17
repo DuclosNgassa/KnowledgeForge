@@ -1,7 +1,8 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class DocumentStatus(str, Enum):
+class EmbeddingStatus(StrEnum):
+    PENDING = "PENDING"
     PROCESSING = "PROCESSING"
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"

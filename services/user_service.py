@@ -3,7 +3,7 @@ from datetime import timedelta
 from fastapi import HTTPException, status
 
 from auth.utils import hash_password, verify_password, create_access_token
-from config import Config
+from core.settings import settings
 from models.user import User
 from repositories.user_repository import UserRepository
 from schemas.user import UserCreate, UserLogin
@@ -55,12 +55,12 @@ class UserService:
 
                 access_token = create_access_token(
                     user_data=user_data,
-                    expiry=timedelta(days=Config.REFRESH_TOKEN_EXPIRATION)
+                    expiry=timedelta(days=settings.refresh_token_expiration)
                 )
                 refresh_token = create_access_token(
                     user_data=user_data,
                     refresh=True,
-                    expiry=timedelta(days=Config.REFRESH_TOKEN_EXPIRATION)
+                    expiry=timedelta(days=settings.refresh_token_expiration)
                 )
 
                 return {

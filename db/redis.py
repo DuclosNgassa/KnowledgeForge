@@ -1,14 +1,14 @@
 import redis.asyncio as aioredis
 
-from config import Config
+from core.settings import settings
 
 JTI_EXPIRY = 3600
 
 token_block_list = aioredis.StrictRedis(
-    host=Config.REDIS_HOST,
-    port=Config.REDIS_PORT,
-    db=Config.REDIS_DB,
-    password=Config.REDIS_PASSWORD,
+    host=settings.redis_host,
+    port=settings.redis_port,
+    db=settings.redis_db,
+    password=settings.redis_password,
 )
 
 

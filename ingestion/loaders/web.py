@@ -9,7 +9,7 @@ class WebLoader:
     def load(self, url: str) -> list[LoadedDocument]:
         loader = WebBaseLoader(url)
         documents = loader.load()
-
+        # TODO handle to long url > 250 chars
         return [
             LoadedDocument(
                 content=document.page_content,

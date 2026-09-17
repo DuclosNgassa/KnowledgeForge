@@ -3,11 +3,12 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import UUID, String, DateTime, Text
+from sqlalchemy import UUID, String, DateTime, Text, Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.schema import ForeignKey
 
 from db.database import Base
+from ingestion.document_status import DocumentStatus
 
 
 class Document(Base):
@@ -50,9 +51,9 @@ class Document(Base):
         nullable=False,
     )
 
-    status: Mapped[str] = mapped_column(
-        String(50),
-        default="PROCESSING",
+    status: Mapped[DocumentStatus] = mapped_column(
+        SQLEnum(DocumentStatus, native_enum=False),
+        default=DocumentStatus.PROCESSING,
         nullable=False,
     )
 

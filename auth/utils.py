@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import jwt
 from pwdlib import PasswordHash
 
-from config import Config
+from core.settings import settings
 
 password_hash = PasswordHash.recommended()
 
@@ -30,8 +30,8 @@ def create_access_token(user_data: dict, expiry: timedelta | None = None, refres
 
     token = jwt.encode(
         payload,
-        key=Config.JWT_SECRET_KEY,
-        algorithm=Config.JWT_ALGORITHM,
+        key=settings.jwt_secret_key,
+        algorithm=settings.jwt_algorithm,
     )
 
     return token
@@ -40,8 +40,8 @@ def decode_token(token: str) -> dict | None:
     try:
         token_data = jwt.decode(
             jwt=token,
-            key=Config.JWT_SECRET_KEY,
-            algorithms=[Config.JWT_ALGORITHM],
+            key=settings.jwt_secret_key,
+            algorithms=[settings.jwt_algorithm],
         )
         return token_data
     except jwt.PyJWTError as e:
