@@ -1,23 +1,24 @@
 from ai.embedding_provider import EmbeddingProvider
-from openai import AsyncOpenAI
+from langchain_openai import OpenAIEmbeddings
 
 
 class OpenAIEmbeddingProvider(EmbeddingProvider):
 
     def __init__(self,
-                 api_key: str,
                  model: str = "text-embedding-3-small"):
-        self.client = AsyncOpenAI(api_key=api_key)
-        self.model = model
+        self.embeddings = OpenAIEmbeddings(model=model)
 
-    async def embed(self,
-                    texts: list[str], ) -> list[list[float]]:
-        response = await self.client.embeddings.create(
-            model=self.model,
-            input=texts,
+    async def embed_documents(self,
+                              texts: list[str],
+                              ) -> list[list[float]]:
+        return await self.embeddings.aembed_documents(
+            texts=texts,
         )
 
-        return [
-            item.embedding
-            for item in response.data
-        ]
+    async def embed_query(
+            self,
+            text: str,
+    ) -> list[float]:
+        return await self.embeddings.aembed_query(
+            text
+        )

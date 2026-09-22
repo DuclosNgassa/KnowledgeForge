@@ -18,7 +18,7 @@ class IngestionService:
 
         chunks = self.chunker.chunk(documents)
 
-        embeddings = self.embedder.embed(chunks)
+        embeddings = self.embedder.embed_documents(chunks)
 
         return self.repository.save(
             chunks,

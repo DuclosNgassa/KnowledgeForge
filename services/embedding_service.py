@@ -38,7 +38,7 @@ class EmbeddingService:
                 for chunk in chunks
             ]
 
-            embeddings = await self.embedding_provider.embed(texts)
+            embeddings = await self.embedding_provider.embed_documents(texts)
 
             if len(embeddings) != len(chunks):
                 raise ValueError(

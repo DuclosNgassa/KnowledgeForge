@@ -219,3 +219,6 @@ __marimo__/
 
 # pyCharm
 .idea
+
+# upload documents
+/uploads
