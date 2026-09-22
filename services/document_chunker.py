@@ -34,7 +34,8 @@ class DocumentChunkService:
                         content=chunk,
                         source=document.source,
                         chunk_index=chunk_index,
-                        metadata=document.metadata, )
+                        metadata=document.metadata,
+                    )
                 )
 
                 chunk_index += 1

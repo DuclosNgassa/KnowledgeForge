@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from db.database import engine, create_tables
-from routers import users, auth, knowledge_bases, document, embedding
+from routers import users, auth, knowledge_bases, document, embedding, chat
 
 
 @asynccontextmanager
@@ -28,3 +28,5 @@ app.include_router(document.router)
 app.include_router(embedding.router)
 
 app.include_router(users.router)
+
+app.include_router(chat.router)

@@ -1,11 +1,13 @@
-from ai.embedding_provider import EmbeddingProvider
+from core.settings import settings
+from embeddings.embedding_provider import EmbeddingProvider
 from langchain_openai import OpenAIEmbeddings
 
 
 class OpenAIEmbeddingProvider(EmbeddingProvider):
 
     def __init__(self,
-                 model: str = "text-embedding-3-small"):
+                 model: str = settings.openai_embedding_model,
+                 ):
         self.embeddings = OpenAIEmbeddings(model=model)
 
     async def embed_documents(self,

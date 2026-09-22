@@ -4,8 +4,11 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ai.embedding_provider import EmbeddingProvider
-from ai.openai_provider import OpenAIEmbeddingProvider
+from agents.agent import create_agent
+from core.settings import Settings, settings
+from embeddings.embedding_provider import EmbeddingProvider
+from embeddings.google_provider import GoogleEmbeddingProvider
+from embeddings.openai_provider import OpenAIEmbeddingProvider
 from auth.dependencies import AccessTokenBearer
 from db.database import get_db
 from ingestion.loader import DocumentLoader
@@ -13,12 +16,13 @@ from repositories.document_chunk_repository import DocumentChunkRepository
 from repositories.document_repository import DocumentRepository
 from repositories.knowledge_base_repository import KnowledgeBaseRepository
 from repositories.user_repository import UserRepository
+from services.agent_service import AgentService
 from services.document_chunker import DocumentChunkService
 from services.document_uploader import DocumentUploader
 from services.embedding_service import EmbeddingService
 from services.knowledge_base_service import KnowledgeBaseService
+from services.similarity_search_service import SimilaritySearchService
 from services.user_service import UserService
-from core.settings import settings
 
 
 def get_user_service(
@@ -62,9 +66,14 @@ def get_current_user_info(
     }
 
 
-def get_openai_embedding_provider(model: str = "text-embedding-3-small") -> EmbeddingProvider:
+def get_openai_embedding_provider(model: str = settings.openai_embedding_model) -> EmbeddingProvider:
     return OpenAIEmbeddingProvider(
-        api_key=settings.openai_api_key,
+        model=model,
+    )
+
+
+def get_google_embedding_provider(model: str = settings.google_embedding_model) -> EmbeddingProvider:
+    return GoogleEmbeddingProvider(
         model=model,
     )
 
@@ -73,9 +82,26 @@ def get_embedding_service(
         session: Annotated[AsyncSession, Depends(get_db)],
 ) -> EmbeddingService:
     repository = DocumentChunkRepository(session)
-    embedding_provider = get_openai_embedding_provider()
+    embedding_provider = get_google_embedding_provider()
     return EmbeddingService(
         session=session,
         repository=repository,
         embedding_provider=embedding_provider,
     )
+
+
+def get_agent_service(
+        session: Annotated[AsyncSession, Depends(get_db)],
+        current_user_info: dict = Depends(get_current_user_info),
+
+) -> AgentService:
+    embedding_provider = get_google_embedding_provider()
+    search_service = SimilaritySearchService(
+        session=session,
+        embedding_provider=embedding_provider,
+    )
+    agent = create_agent(
+        search_service=search_service,
+        user_id=current_user_info["user_id"],
+    )
+    return AgentService(agent=agent)
