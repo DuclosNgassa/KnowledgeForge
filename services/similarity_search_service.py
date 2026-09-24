@@ -49,6 +49,7 @@ class SimilaritySearchService:
                 document_id=chunk.document_id,
                 content=chunk.content,
                 source=chunk.document.source,
+                file_name=chunk.document.file_name,
                 page_number=chunk.page_number,
                 score=1 - distance_value,
             )

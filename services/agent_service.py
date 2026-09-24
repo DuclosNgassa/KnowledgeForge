@@ -16,4 +16,6 @@ class AgentService:
             }
         )
 
-        return result["messages"][-1].content
+        print("result.keys():", result.keys())
+        print("result: ", result)
+        return result["structured_response"]

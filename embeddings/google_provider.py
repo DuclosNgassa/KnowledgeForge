@@ -9,16 +9,14 @@ class GoogleEmbeddingProvider(EmbeddingProvider):
     def __init__(self,
                  model: str = settings.google_embedding_model,
                  ):
-        self.embeddings = GoogleGenerativeAIEmbeddings(
-            model=model,
-            output_dimensionality=1536,
-        )
+        self.embeddings = GoogleGenerativeAIEmbeddings(model=model)
 
     async def embed_documents(self,
                               texts: list[str],
                               ) -> list[list[float]]:
         return await self.embeddings.aembed_documents(
             texts=texts,
+            output_dimensionality=1536,
         )
 
     async def embed_query(
@@ -26,5 +24,6 @@ class GoogleEmbeddingProvider(EmbeddingProvider):
             text: str,
     ) -> list[float]:
         return await self.embeddings.aembed_query(
-            text
+            text,
+            output_dimensionality=1536,
         )

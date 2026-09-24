@@ -1,4 +1,9 @@
+from typing import Any
+from uuid import UUID
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from models import Document
 
@@ -17,7 +22,6 @@ class DocumentRepository:
         self.db.add(document)
 
         await self.db.flush()
-        # await self.db.refresh(document)
 
         return document
 
@@ -29,3 +33,25 @@ class DocumentRepository:
 
     async def rollback(self):
         await self.db.rollback()
+
+    async def find_document_by_id(self, document_id: UUID, user_id: UUID) -> Document | None:
+        statement = (select(Document)
+                     .where(Document.id == document_id)
+                     .where(Document.user_id == user_id))
+
+        result = await self.db.execute(statement)
+
+        return result.scalar_one_or_none()
+
+    async def find_document_chunk_by_id(self, document_id: UUID, user_id: UUID) -> Document | None:
+        statement = (
+            select(Document)
+            .options(
+                selectinload(Document.chunks)
+            )
+            .where(Document.id == document_id)
+            .where(Document.user_id == user_id))
+
+        result = await self.db.execute(statement)
+
+        return result.scalar_one_or_none()

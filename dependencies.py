@@ -18,6 +18,7 @@ from repositories.knowledge_base_repository import KnowledgeBaseRepository
 from repositories.user_repository import UserRepository
 from services.agent_service import AgentService
 from services.document_chunker import DocumentChunkService
+from services.document_service import DocumentService
 from services.document_uploader import DocumentUploader
 from services.embedding_service import EmbeddingService
 from services.knowledge_base_service import KnowledgeBaseService
@@ -96,12 +97,19 @@ def get_agent_service(
 
 ) -> AgentService:
     embedding_provider = get_google_embedding_provider()
+
     search_service = SimilaritySearchService(
         session=session,
         embedding_provider=embedding_provider,
     )
+
+    document_repository = DocumentRepository(session)
+    document_service = DocumentService(document_repository=document_repository)
+
     agent = create_agent(
         search_service=search_service,
+        document_service=document_service,
         user_id=current_user_info["user_id"],
     )
+
     return AgentService(agent=agent)

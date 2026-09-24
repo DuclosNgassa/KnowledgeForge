@@ -2,6 +2,7 @@ from uuid import UUID
 
 from langchain_core.tools import tool
 
+from schemas.retrieved_document import RetrievedDocument
 from services.similarity_search_service import SimilaritySearchService
 
 
@@ -10,7 +11,7 @@ def create_search_documents_tool(
         user_id: UUID,
 ):
     @tool
-    async def search_documents(query: str) -> str:
+    async def search_documents(query: str) -> list[RetrievedDocument]:
         """Search the user´s stored documents for information relevant
          to query.
 
@@ -23,18 +24,23 @@ def create_search_documents_tool(
             limit=5,
         )
 
-        print("Result of search: ", results)
+        # print("Result of search: ", results)
         if not results:
-            return f"No relevant information was found for: {query}"
+            return []
 
-        return "\n\n".join(
-            (
-                f"SOURCE: {result.source}\n"
-                f"PAGE: {result.page_number}\n"
-                f"RELEVANCE: {result.score:.3f}\n"
-                f"CONTENT: {result.content}\n"
+        retrieved_documents = [
+            RetrievedDocument(
+                chunk_id=str(result.chunk_id),
+                document_id=str(result.document_id),
+                content=result.content,
+                filename=result.file_name,
+                page_number=result.page_number,
             )
             for result in results
-        )
+        ]
+
+        print("retrieved_documents: ", retrieved_documents)
+
+        return retrieved_documents
 
     return search_documents

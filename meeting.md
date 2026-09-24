@@ -12,3 +12,21 @@ CRUD for DB and Vector DB
   - CRUD
   - Upload for RAG
 - SqLite / Alchemy
+
+Next Week:
+Tool:
+
+- websearch
+  integrate:
+  - Tavily: https://docs.langchain.com/oss/python/integrations/providers/tavily
+  - Langfuse:
+    - Monitoring
+    - Evaluation
+- Add Agent-Memory
+
+Free tier from Huggingface:
+
+- Grok
+-
+
+Qwen from Alibaba for local model

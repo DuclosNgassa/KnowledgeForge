@@ -16,7 +16,9 @@ class Settings(BaseSettings):
     google_embedding_model: str = "gemini-embedding-001"
     google_api_key: str
     google_chat_model: str = "gemini-3.6-flash"
-
+    user_agent: str = "KnowledgeForge/1.0"
+    tavily_api_key: str
+    
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",
