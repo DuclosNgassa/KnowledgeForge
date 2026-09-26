@@ -67,7 +67,6 @@ class DocumentUploader:
             # 2. Extract content from dir
             loaded_documents = self.document_loader.load(str(file_path))
 
-            print("loaded_documents:\n", loaded_documents)
             document_type = extension.lstrip(".").upper()
 
             # 3. Create Document
@@ -127,7 +126,6 @@ class DocumentUploader:
         loaded_documents = self.document_loader.load(url)
         # TODO create DocumentChunk objects later
         # TODO should the content be saved in db?
-        print("Loaded_documents WEB:\n", loaded_documents)
         document = Document(
             id=uuid4(),
             user_id=user_id,

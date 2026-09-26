@@ -26,6 +26,5 @@ async def get_user_info(
         service: Annotated[UserService, Depends(get_user_service)],
         user_detail=Depends(access_token_bearer),
 ) -> UserResponse:
-    print("user_detail: ", user_detail)
     user = await service.get_user_by_email(email)
     return UserResponse.model_validate(user)

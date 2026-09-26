@@ -29,7 +29,7 @@ async def create_knowledge_base(
         ],
         token_details: dict = Depends(AccessTokenBearer()),
 ) -> KnowledgeBaseResponse:
-    print("token_details in knowledge_base: ", token_details)
+    # print("token_details in knowledge_base: ", token_details)
 
     current_user_id = token_details["user"]["user_id"]
 
@@ -52,7 +52,6 @@ async def update_knowledge_base(
         service: Annotated[KnowledgeBaseService, Depends(get_knowledge_base_service)],
         current_user_info: dict = Depends(get_current_user_info),
 ) -> KnowledgeBaseResponse:
-    print("current_user_info in knowledge_base: ", current_user_info)
     user_id = current_user_info["user_id"]
     result = await service.update_knowledge_base(
         knowledge_base_id=knowledge_base_id,

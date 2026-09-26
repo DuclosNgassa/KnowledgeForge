@@ -34,7 +34,6 @@ class UserService:
         user_data_dict = user_data.model_dump()
         plain_password = user_data_dict.pop("password")
 
-        print("plain_password: ", plain_password)
         password_hash = hash_password(plain_password)
 
         new_user = User(

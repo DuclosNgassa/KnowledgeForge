@@ -8,7 +8,7 @@ class PdfLoader:
     def load(self, file_path: str) -> list[LoadedDocument]:
         loader = PyPDFLoader(file_path)
         documents = loader.load()
-        print("Document in PDF Loader", documents)
+        # print("Document in PDF Loader", documents)
         return [
             LoadedDocument(
                 content=document.page_content,

@@ -22,7 +22,7 @@ from services.document_service import DocumentService
 from services.document_uploader import DocumentUploader
 from services.embedding_service import EmbeddingService
 from services.knowledge_base_service import KnowledgeBaseService
-from services.similarity_search_service import SimilaritySearchService
+from services.search_service import SearchService
 from services.user_service import UserService
 
 
@@ -60,7 +60,6 @@ def get_document_uploader(
 def get_current_user_info(
         user_details: dict = Depends(AccessTokenBearer()),
 ) -> dict:
-    print("user_details in dependencies: ", user_details)
     return {
         "email": user_details["user"]["email"],
         "user_id": uuid.UUID(user_details["user"]["user_id"]),
@@ -98,8 +97,8 @@ def get_agent_service(
 ) -> AgentService:
     embedding_provider = get_google_embedding_provider()
 
-    search_service = SimilaritySearchService(
-        session=session,
+    search_service = SearchService(
+        document_chunk_repository=DocumentChunkRepository(session),
         embedding_provider=embedding_provider,
     )
 

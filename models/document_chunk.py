@@ -4,10 +4,10 @@ from datetime import datetime, timezone
 from uuid import uuid4
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import UUID, Text, Integer, Enum as SQLEnum, DateTime
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import UUID, Text, Integer, Enum as SQLEnum, DateTime, Computed
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql.schema import ForeignKey
+from sqlalchemy.sql.schema import ForeignKey, Index
 from db.database import Base
 from ingestion.embedding_status import EmbeddingStatus
 
@@ -43,9 +43,25 @@ class DocumentChunk(Base):
         nullable=True,
     )
 
+    # Semantic search
     embedding: Mapped[list[float] | None] = mapped_column(
         Vector(1536),
         nullable=True,
+    )
+
+    # Keyword/full-text search
+    search_vector: Mapped[str] = mapped_column(
+        TSVECTOR,
+        Computed(
+            "to_tsvector('simple', content)",
+            persisted=True,
+        )
+    )
+
+    Index(
+        "ix_document_chunks_search_vector",
+        search_vector,
+        postgresql_using="gin",
     )
 
     embedding_status: Mapped[EmbeddingStatus] = mapped_column(

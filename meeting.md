@@ -30,3 +30,6 @@ Free tier from Huggingface:
 -
 
 Qwen from Alibaba for local model
+
+If the goal is specifically becoming a stronger GenAI Engineer
+I'd prioritize Hybrid Search → Reranking → Query Rewriting → Agentic RAG → Evaluation.

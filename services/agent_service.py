@@ -16,6 +16,4 @@ class AgentService:
             }
         )
 
-        print("result.keys():", result.keys())
-        print("result: ", result)
         return result["structured_response"]

@@ -42,7 +42,7 @@ async def login_user(user_data: UserLogin,
                      service: Annotated[UserService, Depends(get_user_service)]
                      ) -> JSONResponse:
     token_dict = await service.login(user_data)
-    print("token_dict", token_dict)
+    # print("token_dict", token_dict)
     if token_dict is not None:
         return JSONResponse(
             content={
@@ -65,7 +65,7 @@ async def login_user(user_data: UserLogin,
 
 @router.get("/refresh_token", )
 async def get_refresh_token(token_details: dict = Depends(RefreshTokenBearer())):
-    print("token_details", token_details)
+    #print("token_details", token_details)
     expiry_timestamp = token_details["exp"]
     if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
         new_access_token = create_access_token(user_data=token_details["user"])
@@ -79,7 +79,7 @@ async def get_refresh_token(token_details: dict = Depends(RefreshTokenBearer()))
 
 @router.get("/logout")
 async def logout(token_details: dict = Depends(AccessTokenBearer())):
-    print("token_details in auth/logout", token_details)
+    #print("token_details in auth/logout", token_details)
     jti = token_details["jti"]
     await add_jti_to_block_list(jti)
     return JSONResponse(

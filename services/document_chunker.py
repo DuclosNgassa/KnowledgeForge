@@ -25,7 +25,6 @@ class DocumentChunkService:
         result: list[DocumentChunkData] = []
         chunk_index = 0
         for document in documents:
-            print("Document in chunk:", document.content)
             chunks = self.spliter.split_text(document.content)
 
             for chunk in chunks:
@@ -40,5 +39,4 @@ class DocumentChunkService:
 
                 chunk_index += 1
 
-        print("Chunk result:", result)
         return result

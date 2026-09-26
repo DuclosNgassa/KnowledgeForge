@@ -3,11 +3,11 @@ from uuid import UUID
 from langchain_core.tools import tool
 
 from schemas.retrieved_document import RetrievedDocument
-from services.similarity_search_service import SimilaritySearchService
+from services.search_service import SearchService
 
 
 def create_search_documents_tool(
-        search_service: SimilaritySearchService,
+        search_service: SearchService,
         user_id: UUID,
 ):
     @tool
@@ -18,13 +18,12 @@ def create_search_documents_tool(
          Use this tool whenever information from user´s uploaded
          documents is needed
          """
-        results = await search_service.search(
+        results = await search_service.do_hybrid_search(
             query=query,
             user_id=user_id,
             limit=5,
         )
 
-        # print("Result of search: ", results)
         if not results:
             return []
 
