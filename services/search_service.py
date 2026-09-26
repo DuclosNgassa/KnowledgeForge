@@ -87,9 +87,9 @@ class SearchService:
                 source=chunk.document.source,
                 file_name=chunk.document.file_name,
                 page_number=chunk.page_number,
-                score=1 - distance_value,
+                score=keyword_score,
             )
-            for chunk, distance_value in rows
+            for chunk, keyword_score in rows
         ]
 
     async def do_hybrid_search(
