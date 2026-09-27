@@ -18,7 +18,9 @@ class Settings(BaseSettings):
     google_chat_model: str = "gemini-3.6-flash"
     user_agent: str = "KnowledgeForge/1.0"
     tavily_api_key: str
-    
+    cohere_api_key: str
+    cohere_rerank_model: str = "rerank-v3.5"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         extra="ignore",

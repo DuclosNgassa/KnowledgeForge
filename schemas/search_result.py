@@ -1,23 +1,25 @@
 from dataclasses import dataclass
 from uuid import UUID
 
-from pydantic import BaseModel
 
+@dataclass
+class BaseSearchResult:
+    content: str
+    rerank_score: float | None = None
 
 # RAG layer's data structure.
-@dataclass
-class SearchResult:
+@dataclass(kw_only=True)
+class SearchResult(BaseSearchResult):
     chunk_id: UUID
     document_id: UUID
-    content: str
     source: str
     file_name: str
     page_number: int
     score: float
 
 
-@dataclass
-class WebSearchResult:
+# RAG layer's data structure.
+@dataclass(kw_only=True)
+class WebSearchResult(BaseSearchResult):
     title: str
     url: str
-    content: str

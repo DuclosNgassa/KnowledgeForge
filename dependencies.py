@@ -22,6 +22,8 @@ from services.document_service import DocumentService
 from services.document_uploader import DocumentUploader
 from services.embedding_service import EmbeddingService
 from services.knowledge_base_service import KnowledgeBaseService
+from services.reranker.base import Reranker
+from services.reranker.cohere_reranker import CohereReranker
 from services.search_service import SearchService
 from services.user_service import UserService
 
@@ -104,10 +106,12 @@ def get_agent_service(
 
     document_repository = DocumentRepository(session)
     document_service = DocumentService(document_repository=document_repository)
+    reranker: Reranker = CohereReranker(api_key=settings.cohere_api_key)
 
     agent = create_agent(
         search_service=search_service,
         document_service=document_service,
+        reranker=reranker,
         user_id=current_user_info["user_id"],
     )
 

@@ -3,11 +3,13 @@ from uuid import UUID
 from langchain_core.tools import tool
 
 from schemas.retrieved_document import RetrievedDocument
+from services.reranker.base import Reranker
 from services.search_service import SearchService
 
 
 def create_search_documents_tool(
         search_service: SearchService,
+        reranker: Reranker,
         user_id: UUID,
 ):
     @tool
@@ -27,6 +29,16 @@ def create_search_documents_tool(
         if not results:
             return []
 
+        print("Search result before reranking: ", results)
+
+        reranked_results = await reranker.rerank(
+            query=query,
+            results=results,
+            top_k=5,
+        )
+        print("Search result after reranking: ", reranked_results)
+
+
         retrieved_documents = [
             RetrievedDocument(
                 chunk_id=str(result.chunk_id),
@@ -35,10 +47,9 @@ def create_search_documents_tool(
                 filename=result.file_name,
                 page_number=result.page_number,
             )
-            for result in results
+            for result in reranked_results
         ]
 
-        print("retrieved_documents: ", retrieved_documents)
 
         return retrieved_documents
 
