@@ -14,10 +14,11 @@ router = APIRouter(
 
 @router.post("", response_model=AgentResponse)
 async def chat(
-        request: ChatRequest,
+        chat_request: ChatRequest,
         agent_service: AgentService = Depends(get_agent_service),
         token_details: dict = Depends(AccessTokenBearer())
 ):
+
     return await agent_service.chat(
-        message=request.message,
+        message=chat_request.message,
     )

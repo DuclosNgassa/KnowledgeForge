@@ -1,6 +1,7 @@
 import cohere
 
 from core.settings import settings
+from observability.tracing import trace_operation
 from schemas.search_result import SearchResult
 from services.reranker.base import Reranker
 
@@ -15,30 +16,38 @@ class CohereReranker(Reranker):
             query: str,
             results: list[SearchResult],
             top_k: int = 5,
+            request_id: str | None = None,
     ) -> list[SearchResult]:
 
-        if not results:
-            return []
+        async with trace_operation(
+                "reranking",
+                request_id=request_id,
+                candidate_count=len(results),
+                top_k=top_k,
+        ):
 
-        documents = [
-            result.content
-            for result in results
-        ]
+            if not results:
+                return []
 
-        response = await self.client.rerank(
-            model=settings.cohere_rerank_model,
-            query=query,
-            documents=documents,
-            top_n=top_k,
-        )
+            documents = [
+                result.content
+                for result in results
+            ]
 
-        reranked_results = []
+            response = await self.client.rerank(
+                model=settings.cohere_rerank_model,
+                query=query,
+                documents=documents,
+                top_n=top_k,
+            )
 
-        for item in response.results:
-            result = results[item.index]
+            reranked_results = []
 
-            result.rerank_score = item.relevance_score
+            for item in response.results:
+                result = results[item.index]
 
-            reranked_results.append(result)
+                result.rerank_score = item.relevance_score
 
-        return reranked_results
+                reranked_results.append(result)
+
+            return reranked_results

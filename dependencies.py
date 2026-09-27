@@ -1,11 +1,11 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from agents.agent import create_agent
-from core.settings import Settings, settings
+from core.settings import settings
 from embeddings.embedding_provider import EmbeddingProvider
 from embeddings.google_provider import GoogleEmbeddingProvider
 from embeddings.openai_provider import OpenAIEmbeddingProvider
@@ -93,10 +93,13 @@ def get_embedding_service(
 
 
 def get_agent_service(
+        request: Request,
         session: Annotated[AsyncSession, Depends(get_db)],
         current_user_info: dict = Depends(get_current_user_info),
 
 ) -> AgentService:
+    request_id = request.state.request_id
+
     embedding_provider = get_google_embedding_provider()
 
     search_service = SearchService(
@@ -113,6 +116,7 @@ def get_agent_service(
         document_service=document_service,
         reranker=reranker,
         user_id=current_user_info["user_id"],
+        request_id=request_id,
     )
 
     return AgentService(agent=agent)

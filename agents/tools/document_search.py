@@ -11,6 +11,7 @@ def create_search_documents_tool(
         search_service: SearchService,
         reranker: Reranker,
         user_id: UUID,
+        request_id: str | None = None,
 ):
     @tool
     async def search_documents(query: str) -> list[RetrievedDocument]:
@@ -24,19 +25,21 @@ def create_search_documents_tool(
             query=query,
             user_id=user_id,
             limit=5,
+            request_id=request_id,
         )
 
         if not results:
             return []
 
-        print("Search result before reranking: ", results)
+        # print("Search result before reranking: ", results)
 
         reranked_results = await reranker.rerank(
             query=query,
             results=results,
             top_k=5,
+            request_id=request_id
         )
-        print("Search result after reranking: ", reranked_results)
+        #print("Search result after reranking: ", reranked_results)
 
 
         retrieved_documents = [

@@ -15,12 +15,14 @@ def create_agent(
         search_service,
         document_service,
         reranker,
-        user_id
+        user_id,
+        request_id,
 ):
     search_documents = create_search_documents_tool(
         search_service=search_service,
         reranker=reranker,
         user_id=user_id,
+        request_id=request_id,
     )
 
     get_document_metadata = create_get_document_metadata_tool(

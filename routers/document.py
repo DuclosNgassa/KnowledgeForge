@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, UploadFile, File
+from fastapi import APIRouter, UploadFile, File, Request
 from fastapi.params import Depends
 
 from dependencies import get_current_user_info, get_document_uploader
@@ -25,15 +25,21 @@ knowledge_base_id: optional UUID
 @router.post("")
 async def upload_document(
         document_uploader: Annotated[DocumentUploader, Depends(get_document_uploader)],
+        request: Request,
         file: UploadFile = File(...),
         knowledge_base_id: UUID | None = None,
         current_user_info: dict = Depends(get_current_user_info),
 ):
     user_id = current_user_info["user_id"]
+
+    request_id = request.state.request_id
+
     return await document_uploader.upload_document(
         file,
         user_id,
-        knowledge_base_id)
+        request_id,
+        knowledge_base_id,
+    )
 
 
 """

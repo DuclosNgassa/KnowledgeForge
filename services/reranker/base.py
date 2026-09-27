@@ -10,5 +10,7 @@ class Reranker(ABC):
             self,
             query: str,
             results: list[SearchResult],
-            top_k: int = 5) -> list[SearchResult]:
+            top_k: int = 5,
+            request_id: str | None = None,
+    ) -> list[SearchResult]:
         pass

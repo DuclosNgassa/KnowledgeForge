@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from embeddings.embedding_provider import EmbeddingProvider
+from observability.tracing import trace_operation
 
 from repositories.document_chunk_repository import DocumentChunkRepository
 from schemas.search_result import SearchResult
@@ -97,33 +98,48 @@ class SearchService:
             query: str,
             user_id: UUID,
             limit: int = 10,
+            request_id: str | None = None,
     ):
         # 1. Semantic search
-        vector_results = await self.do_similarity_search(
-            query=query,
-            user_id=user_id,
-            limit=20,
-        )
+        async with trace_operation(
+                operation="vector_search",
+                query=query,
+                request_id=request_id,
+        ):
+            vector_results = await self.do_similarity_search(
+                query=query,
+                user_id=user_id,
+                limit=20,
+            )
 
-        print("Result of semantic search: ", vector_results)
+            # print("Result of semantic search: ", vector_results)
 
         # 2. Keyword search
-        keyword_results = await self.do_keyword_search(
-            query=query,
-            user_id=user_id,
-            limit=20,
-        )
+        async with trace_operation(
+                operation="keyword_search",
+                query=query,
+                request_id=request_id,
+        ):
+            keyword_results = await self.do_keyword_search(
+                query=query,
+                user_id=user_id,
+                limit=20,
+            )
 
-        print("\n")
-        print("Result of keyword search: ", vector_results)
+            print("\n")
+            #print("Result of keyword search: ", vector_results)
 
-        result_lists = [vector_results, keyword_results]
+            result_lists = [vector_results, keyword_results]
 
         # 3. Fuse results
-        results = _reciprocal_rank_fusion(
-            result_lists=result_lists
-        )
-        print("\n")
-        print("Final fusion search: ", vector_results)
+        async with trace_operation(
+                operation="rrf_fusion",
+                request_id=request_id,
+        ):
+            results = _reciprocal_rank_fusion(
+                result_lists=result_lists
+            )
+            print("\n")
+            #print("Final fusion search: ", vector_results)
 
         return results[:limit]
