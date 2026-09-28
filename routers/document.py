@@ -4,9 +4,10 @@ from uuid import UUID
 from fastapi import APIRouter, UploadFile, File, Request
 from fastapi.params import Depends
 
-from dependencies import get_current_user_info, get_document_uploader
+from dependencies import get_current_user_info, get_document_uploader, get_ingestion_service
+from ingestion.ingestion_service import IngestionService
 from schemas.document import DocumentUrlRequest
-from services.document_uploader import DocumentUploader
+from services.document_uploader import DocumentUploader, upload_and_save_document
 
 router = APIRouter(
     prefix="/documents",
@@ -24,7 +25,7 @@ knowledge_base_id: optional UUID
 
 @router.post("")
 async def upload_document(
-        document_uploader: Annotated[DocumentUploader, Depends(get_document_uploader)],
+        ingestion_service: Annotated[IngestionService, Depends(get_ingestion_service)],
         request: Request,
         file: UploadFile = File(...),
         knowledge_base_id: UUID | None = None,
@@ -34,12 +35,22 @@ async def upload_document(
 
     request_id = request.state.request_id
 
-    return await document_uploader.upload_document(
+    document_id, extension, file_path, filename = await upload_and_save_document(
         file,
-        user_id,
         request_id,
-        knowledge_base_id,
     )
+
+    await ingestion_service.ingest(
+        document_id=document_id,
+        extension=extension,
+        file_path=file_path,
+        filename=filename,
+        user_id=user_id,
+        knowledge_base_id=knowledge_base_id,
+    )
+
+
+# TODO start the ingestion as background task
 
 
 """

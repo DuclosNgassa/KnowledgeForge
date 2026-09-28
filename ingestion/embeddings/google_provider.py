@@ -1,20 +1,22 @@
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
 from core.settings import settings
-from embeddings.embedding_provider import EmbeddingProvider
-from langchain_openai import OpenAIEmbeddings
+from ingestion.embeddings.embedding_provider import EmbeddingProvider
 
 
-class OpenAIEmbeddingProvider(EmbeddingProvider):
+class GoogleEmbeddingProvider(EmbeddingProvider):
 
     def __init__(self,
-                 model: str = settings.openai_embedding_model,
+                 model: str = settings.google_embedding_model,
                  ):
-        self.embeddings = OpenAIEmbeddings(model=model)
+        self.embeddings = GoogleGenerativeAIEmbeddings(model=model)
 
     async def embed_documents(self,
                               texts: list[str],
                               ) -> list[list[float]]:
         return await self.embeddings.aembed_documents(
             texts=texts,
+            output_dimensionality=1536,
         )
 
     async def embed_query(
@@ -22,5 +24,6 @@ class OpenAIEmbeddingProvider(EmbeddingProvider):
             text: str,
     ) -> list[float]:
         return await self.embeddings.aembed_query(
-            text
+            text,
+            output_dimensionality=1536,
         )

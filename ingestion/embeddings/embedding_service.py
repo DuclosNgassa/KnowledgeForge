@@ -2,8 +2,8 @@ from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from embeddings.embedding_provider import EmbeddingProvider
-from ingestion.embedding_status import EmbeddingStatus
+from ingestion.embeddings.embedding_provider import EmbeddingProvider
+from ingestion.models.embedding_status import EmbeddingStatus
 from repositories.document_chunk_repository import DocumentChunkRepository
 
 

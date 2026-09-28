@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ingestion.embedding_status import EmbeddingStatus
+from ingestion.models.embedding_status import EmbeddingStatus
 from models import DocumentChunk, Document
 from sqlalchemy.orm import selectinload
 

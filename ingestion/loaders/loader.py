@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from ingestion.loaded_document import LoadedDocument
+from ingestion.models.loaded_document import LoadedDocument
 from ingestion.loaders.markdown import MarkdownLoader
 from ingestion.loaders.pdf import PdfLoader
 from ingestion.loaders.text import TextLoader

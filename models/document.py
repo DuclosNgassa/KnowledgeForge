@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.schema import ForeignKey
 
 from db.database import Base
-from ingestion.document_status import DocumentStatus
+from ingestion.models.document_status import DocumentStatus
 
 
 class Document(Base):

@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.params import Depends
 
 from dependencies import get_embedding_service
-from services.embedding_service import EmbeddingService
+from ingestion.embeddings.embedding_service import EmbeddingService
 
 router = APIRouter(
     prefix="/embeddings",

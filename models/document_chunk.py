@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.schema import ForeignKey, Index
 from db.database import Base
-from ingestion.embedding_status import EmbeddingStatus
+from ingestion.models.embedding_status import EmbeddingStatus
 
 
 class DocumentChunk(Base):

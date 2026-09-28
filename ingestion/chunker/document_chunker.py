@@ -1,13 +1,18 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from ingestion.loaded_document import LoadedDocument
+from ingestion.models.loaded_document import LoadedDocument
+from models import DocumentChunk
+from repositories.document_chunk_repository import DocumentChunkRepository
 from schemas.document_chunk import DocumentChunkData
 
 
 class DocumentChunkService:
 
     def __init__(self,
+                 repository: DocumentChunkRepository,
                  chunk_size: int = 1000,
-                 chunk_overlap: int = 200):
+                 chunk_overlap: int = 200,
+                 ):
+        self.repository = repository
         self.spliter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
@@ -40,3 +45,6 @@ class DocumentChunkService:
                 chunk_index += 1
 
         return result
+
+    async def save_all(self, document_chunks: list[DocumentChunk]):
+        await self.repository.save_all(document_chunks)

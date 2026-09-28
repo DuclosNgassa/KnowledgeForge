@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from ingestion.document_type import DocumentType
-from ingestion.loaded_document import LoadedDocument
+from ingestion.models.document_type import DocumentType
+from ingestion.models.loaded_document import LoadedDocument
 
 
 class TextLoader:

@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from embeddings.embedding_provider import EmbeddingProvider
+from ingestion.embeddings.embedding_provider import EmbeddingProvider
 from observability.tracing import trace_operation
 
 from repositories.document_chunk_repository import DocumentChunkRepository

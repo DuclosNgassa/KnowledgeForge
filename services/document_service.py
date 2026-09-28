@@ -23,3 +23,6 @@ class DocumentService:
             document_id=document_id,
             user_id=user_id
         )
+
+    async def save(self, document: Document):
+        await self.document_repository.save(document)

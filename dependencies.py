@@ -6,21 +6,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from agents.agent import create_agent
 from core.settings import settings
-from embeddings.embedding_provider import EmbeddingProvider
-from embeddings.google_provider import GoogleEmbeddingProvider
-from embeddings.openai_provider import OpenAIEmbeddingProvider
+from ingestion.embeddings.embedding_provider import EmbeddingProvider
 from auth.dependencies import AccessTokenBearer
 from db.database import get_db
-from ingestion.loader import DocumentLoader
+from ingestion.embeddings.google_provider import GoogleEmbeddingProvider
+from ingestion.embeddings.openai_provider import OpenAIEmbeddingProvider
+from ingestion.ingestion_service import IngestionService
+from ingestion.loaders.loader import DocumentLoader
 from repositories.document_chunk_repository import DocumentChunkRepository
 from repositories.document_repository import DocumentRepository
 from repositories.knowledge_base_repository import KnowledgeBaseRepository
 from repositories.user_repository import UserRepository
 from services.agent_service import AgentService
-from services.document_chunker import DocumentChunkService
+from ingestion.chunker.document_chunker import DocumentChunkService
 from services.document_service import DocumentService
 from services.document_uploader import DocumentUploader
-from services.embedding_service import EmbeddingService
+from ingestion.embeddings.embedding_service import EmbeddingService
 from services.knowledge_base_service import KnowledgeBaseService
 from services.reranker.base import Reranker
 from services.reranker.cohere_reranker import CohereReranker
@@ -44,17 +45,25 @@ def get_knowledge_base_service(
 
 
 def get_document_uploader(
-        db: Annotated[AsyncSession, Depends(get_db)],
 ) -> DocumentUploader:
-    repository = DocumentRepository(db)
-    document_chunk_service = DocumentChunkService()
-    document_chunk_repository = DocumentChunkRepository(db)
     document_loader = DocumentLoader()
     return DocumentUploader(
-        repository=repository,
-        document_chunk_service=document_chunk_service,
-        document_chunk_repository=document_chunk_repository,
         document_loader=document_loader,
+    )
+
+
+def get_ingestion_service(
+        db: Annotated[AsyncSession, Depends(get_db)],
+) -> IngestionService:
+    document_repository = DocumentRepository(db)
+    document_service = DocumentService(document_repository)
+    document_chunk_repository = DocumentChunkRepository(db)
+    document_chunk_service = DocumentChunkService(document_chunk_repository)
+    document_loader = DocumentLoader()
+    return IngestionService(
+        loader=document_loader,
+        chunker=document_chunk_service,
+        document_service=document_service,
         session=db
     )
 
