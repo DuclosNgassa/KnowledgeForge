@@ -26,7 +26,11 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-
+from app.models.user import User
+from app.models.document import Document
+from app.models.document_chunk import DocumentChunk
+from app.models.knowledge_base import KnowledgeBase
+from app.models.chat_session import ChatSession
 target_metadata = Base.metadata
 
 

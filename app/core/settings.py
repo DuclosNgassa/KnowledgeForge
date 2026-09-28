@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     tavily_api_key: str
     cohere_api_key: str
     cohere_rerank_model: str = "rerank-v3.5"
+    langfuse_public_key: str
+    langfuse_secret_key: str
+    langfuse_base_url: str = "https://cloud.langfuse.com"
+    langfuse_tracing_environment: str = "development"
 
     model_config = SettingsConfigDict(
         env_file=".env",

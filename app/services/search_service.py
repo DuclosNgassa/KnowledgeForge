@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from app.ingestion.embeddings.embedding_provider import EmbeddingProvider
-from app.observability.tracing import trace_operation
+from app.observability.langfuse import langfuse
 
 from app.repositories.document_chunk_repository import DocumentChunkRepository
 from app.schemas.search_result import SearchResult
@@ -101,45 +101,67 @@ class SearchService:
             request_id: str | None = None,
     ):
         # 1. Semantic search
-        async with trace_operation(
-                operation="vector_search",
-                query=query,
-                request_id=request_id,
-        ):
+        with langfuse.start_as_current_observation(
+                as_type="retriever",
+                name="vector_search",
+                input={
+                    "query": query,
+                    "limit": limit,
+                },
+        ) as observation:
             vector_results = await self.do_similarity_search(
                 query=query,
                 user_id=user_id,
                 limit=20,
             )
 
+            observation.update(
+                output={
+                    "result_count": len(vector_results),
+                }
+            )
             # print("Result of semantic search: ", vector_results)
 
         # 2. Keyword search
-        async with trace_operation(
-                operation="keyword_search",
-                query=query,
-                request_id=request_id,
-        ):
+        with langfuse.start_as_current_observation(
+                as_type="retriever",
+                name="keyword_search",
+                input={
+                    "query": query,
+                    "limit": limit,
+                },
+        ) as observation:
             keyword_results = await self.do_keyword_search(
                 query=query,
                 user_id=user_id,
                 limit=20,
             )
 
+            observation.update(
+                output={
+                    "result_count": len(keyword_results),
+                }
+            )
             print("\n")
-            #print("Result of keyword search: ", vector_results)
+            # print("Result of keyword search: ", vector_results)
 
             result_lists = [vector_results, keyword_results]
 
         # 3. Fuse results
-        async with trace_operation(
-                operation="rrf_fusion",
-                request_id=request_id,
-        ):
-            results = _reciprocal_rank_fusion(
+        with langfuse.start_as_current_observation(
+                as_type="span",
+                name="rrf_fusion",
+                input={
+                    "vector_count": len(vector_results),
+                    "keyword_count": len(keyword_results),
+                },
+        ) as observation:
+            fused_results = _reciprocal_rank_fusion(
                 result_lists=result_lists
             )
             print("\n")
-            #print("Final fusion search: ", vector_results)
-
-        return results[:limit]
+            # print("Final fusion search: ", vector_results)
+        observation.update(
+            output={"result_count": len(fused_results)}
+        )
+        return fused_results[:limit]

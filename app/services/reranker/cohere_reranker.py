@@ -1,7 +1,7 @@
 import cohere
 
 from app.core.settings import settings
-from app.observability.tracing import trace_operation
+from app.observability.langfuse import langfuse
 from app.schemas.search_result import SearchResult
 from app.services.reranker.base import Reranker
 
@@ -19,12 +19,15 @@ class CohereReranker(Reranker):
             request_id: str | None = None,
     ) -> list[SearchResult]:
 
-        async with trace_operation(
-                "reranking",
-                request_id=request_id,
-                candidate_count=len(results),
-                top_k=top_k,
-        ):
+        with langfuse.start_as_current_observation(
+                as_type="span",
+                name="reranking",
+                input={
+                    "query": query,
+                    "candidate_count": len(results),
+                    "top_k": top_k,
+                },
+        ) as observation:
 
             if not results:
                 return []
@@ -49,5 +52,11 @@ class CohereReranker(Reranker):
                 result.rerank_score = item.relevance_score
 
                 reranked_results.append(result)
+
+            observation.update(
+                output={
+                    "result_count": len(reranked_results),
+                }
+            )
 
             return reranked_results
