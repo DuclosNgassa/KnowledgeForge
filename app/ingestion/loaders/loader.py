@@ -1,0 +1,38 @@
+from pathlib import Path
+
+from app.ingestion.models.loaded_document import LoadedDocument
+from app.ingestion.loaders.markdown import MarkdownLoader
+from app.ingestion.loaders.pdf import PdfLoader
+from app.ingestion.loaders.text import TextLoader
+from app.ingestion.loaders.web import WebLoader
+from app.ingestion.loaders.word import WordLoader
+
+
+class DocumentLoader:
+
+    def __init__(self):
+        self.pdf_loader = PdfLoader()
+        self.text_loader = TextLoader()
+        self.markdown_loader = MarkdownLoader()
+        self.word_loader = WordLoader()
+        self.web_loader = WebLoader()
+
+    def load(self, source: str) -> list[LoadedDocument]:
+        if source.startswith(("http://", "https://")):
+            return self.web_loader.load(source)
+
+        extension = Path(source).suffix.lower()
+
+        match extension:
+            case ".pdf":
+                return self.pdf_loader.load(source)
+            case ".txt":
+                return self.text_loader.load(source)
+            case ".md":
+                return self.markdown_loader.load(source)
+            case ".docx":
+                return self.word_loader.load(source)
+            case _:
+                raise ValueError(
+                    f"Unsupported document type: {extension}"
+                )

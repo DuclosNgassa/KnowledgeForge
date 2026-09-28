@@ -5,8 +5,8 @@ from sqlalchemy import Connection
 from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from core.settings import settings
-from db.database import Base
+from app.core.settings import settings
+from app.core.db.database import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -27,10 +27,6 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 
-from models.user import User
-from models.document import Document
-from models.document_chunk import DocumentChunk
-from models.knowledge_base import KnowledgeBase
 target_metadata = Base.metadata
 
 
