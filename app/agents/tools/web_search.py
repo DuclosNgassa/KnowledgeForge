@@ -3,6 +3,7 @@ from langchain_tavily import TavilySearch
 
 from app.core.settings import settings
 from app.schemas.search_result import WebSearchResult
+from app.observability.langfuse import langfuse
 
 
 def create_web_search_tool():
@@ -26,20 +27,33 @@ def create_web_search_tool():
         recent events, websites, public information, or topics that
         are not covered by user´s documents.
         """
-
-        response = await tavily.ainvoke(
-            {
-                "query": query,
-            }
-        )
-
-        return [
-            WebSearchResult(
-                title=result["title"],
-                url=result["url"],
-                content=result["content"]
+        with langfuse.start_as_current_observation(
+                as_type="retriever",
+                name="web_search",
+                input={
+                    "query": query,
+                },
+        ) as observation:
+            response = await tavily.ainvoke(
+                {
+                    "query": query,
+                }
             )
-            for result in response["results"]
-        ]
+
+            web_search_results = [
+                WebSearchResult(
+                    title=result["title"],
+                    url=result["url"],
+                    content=result["content"]
+                )
+                for result in response["results"]
+            ]
+
+            observation.update(
+                output={
+                    "result_count": len(web_search_results),
+                }
+            )
+            return web_search_results
 
     return web_search

@@ -26,6 +26,7 @@ class CohereReranker(Reranker):
                     "query": query,
                     "candidate_count": len(results),
                     "top_k": top_k,
+                    "model": settings.cohere_rerank_model,
                 },
         ) as observation:
 
