@@ -15,7 +15,10 @@ router = APIRouter(
 )
 
 
-@router.post("/sessions/{session_id}/messages", response_model=AgentResponse)
+@router.post(
+    "/sessions/{session_id}/messages",
+    response_model=AgentResponse,
+)
 async def chat(
         session_id: UUID,
         chat_request: ChatRequest,
