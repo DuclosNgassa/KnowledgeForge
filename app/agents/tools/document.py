@@ -2,6 +2,7 @@ from uuid import UUID
 
 from langchain_core.tools import tool
 
+from app.observability.langfuse import langfuse
 from app.services.document_service import DocumentService
 
 
@@ -20,20 +21,41 @@ def create_get_document_metadata_tool(
 
         Do not invent document IDs.
         """
-        document = await document_service.find_document_by_id(
-            document_id=document_id,
-            user_id=user_id
-        )
+        with langfuse.start_as_current_observation(
+                as_type="span",
+                name="get_document_metadata",
+                input={
+                    "document_id": str(document_id),
+                },
+        ) as observation:
+            document = await document_service.find_document_by_id(
+                document_id=document_id,
+                user_id=user_id
+            )
 
-        if not document:
-            return "Document not found"
+            if not document:
+                observation.update(
+                    output={
+                        "found": False,
+                    }
+                )
+                return "Document not found"
 
-        return (
-            f"ID: {document.id}\n"
-            f"Filename: {document.file_name}\n"
-            f"Type: {document.document_type}\n"
-            f"Source: {document.source}\n"
-            f"Status: {document.status}\n"
-        )
+            observation.update(
+                output={
+                    "found": True,
+                    "filename": document.file_name,
+                    "type": document.document_type,
+                    "source": document.source,
+                    "status": document.status,
+                }
+            )
+            return (
+                f"ID: {document.id}\n"
+                f"Filename: {document.file_name}\n"
+                f"Type: {document.document_type}\n"
+                f"Source: {document.source}\n"
+                f"Status: {document.status}\n"
+            )
 
     return get_document_metadata

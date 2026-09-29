@@ -38,7 +38,9 @@ class AgentService:
                         "callbacks": [langfuse_handler],
                     }
                 )
+
             agent_response = response["structured_response"]
+
             agent_observation.update(
                 output={
                     "answer": agent_response.answer,
@@ -48,4 +50,5 @@ class AgentService:
                     ]
                 }
             )
+
             return agent_response
