@@ -3,10 +3,13 @@ from datetime import datetime
 
 from sqlalchemy import ForeignKey, DateTime, func
 from sqlalchemy.dialects.postgresql.base import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db.database import Base
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from app.models.chat_message import ChatMessage
 
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
@@ -28,4 +31,10 @@ class ChatSession(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
+    )
+
+    messages: Mapped[list["ChatMessage"]] = relationship(
+        back_populates="session",
+        cascade="all, delete-orphan",
+        order_by="desc(ChatMessage.created_at)",
     )

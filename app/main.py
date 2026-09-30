@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from app.core.db.database import engine, init_database, close_database
+from app.core.db.database import close_database
 from app.observability.logging import setup_logging
 from app.observability.middleware import observability_middleware
 from app.api.routes import users, embedding, knowledge_bases, document, chat, auth
@@ -10,8 +10,6 @@ from app.api.routes import users, embedding, knowledge_bases, document, chat, au
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await init_database()
-    # print("Database reset successfully.")
     yield
     await close_database()
 

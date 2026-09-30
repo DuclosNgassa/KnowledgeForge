@@ -14,12 +14,14 @@ from app.ingestion.embeddings.google_provider import GoogleEmbeddingProvider
 from app.ingestion.embeddings.openai_provider import OpenAIEmbeddingProvider
 from app.ingestion.ingestion_service import IngestionService
 from app.ingestion.loaders.loader import DocumentLoader
+from app.repositories.chat_message_repository import ChatMessageRepository
 from app.repositories.chat_session_repository import ChatSessionRepository
 from app.repositories.document_chunk_repository import DocumentChunkRepository
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.knowledge_base_repository import KnowledgeBaseRepository
 from app.repositories.user_repository import UserRepository
 from app.services.agent_service import AgentService
+from app.services.chat_message_service import ChatMessageService
 from app.services.chat_session_service import ChatSessionService
 from app.services.document_service import DocumentService
 from app.services.document_uploader import DocumentUploader
@@ -120,7 +122,10 @@ def get_agent_service(
 
     document_repository = DocumentRepository(session)
     document_service = DocumentService(document_repository=document_repository)
+
     reranker: Reranker = CohereReranker(api_key=settings.cohere_api_key)
+
+    chat_message_service = get_chat_message_service(session)
 
     agent = create_agent(
         search_service=search_service,
@@ -130,7 +135,7 @@ def get_agent_service(
         request_id=request_id,
     )
 
-    return AgentService(agent=agent)
+    return AgentService(agent=agent, chat_message_service=chat_message_service)
 
 
 def get_chat_session_service(
@@ -138,3 +143,10 @@ def get_chat_session_service(
 ) -> ChatSessionService:
     repository = ChatSessionRepository(db)
     return ChatSessionService(repository)
+
+
+def get_chat_message_service(
+        session: AsyncSession = Depends(get_db),
+) -> ChatMessageService:
+    repository = ChatMessageRepository(session)
+    return ChatMessageService(repository)
