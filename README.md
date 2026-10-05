@@ -708,3 +708,9 @@ Generate Answer
 -   Conversation memory
 -   Context management
 -   Query rewriting
+
+#### Start the Taskiq worker
+
+```
+uv run taskiq worker --app-dir . --workers 1 app.workers.broker:broker app.workers.embedding_tasks
+```

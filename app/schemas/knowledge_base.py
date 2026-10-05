@@ -1,5 +1,5 @@
-import uuid
 from datetime import datetime
+from uuid import UUID
 
 from pydantic import BaseModel, Field
 
@@ -25,9 +25,9 @@ class KnowledgeBaseUpdate(BaseModel):
 
 
 class KnowledgeBaseResponse(BaseModel):
-    id: uuid.UUID
+    id: UUID
     name: str
-    user_id: uuid.UUID
+    user_id: UUID
     created_at: datetime
     updated_at: datetime
 

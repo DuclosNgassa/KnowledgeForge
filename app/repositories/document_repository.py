@@ -1,9 +1,10 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.ingestion.models.document_status import DocumentStatus
 from app.models import Document
 
 
@@ -54,3 +55,11 @@ class DocumentRepository:
         result = await self.db.execute(statement)
 
         return result.scalar_one_or_none()
+
+    async def set_document_to_ready(self, document_id: UUID):
+        print("set_document_to_ready: ", document_id)
+        await self.db.execute(
+            update(Document)
+            .where(Document.id == document_id)
+            .values(status=DocumentStatus.READY)
+        )

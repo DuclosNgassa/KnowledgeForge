@@ -68,6 +68,7 @@ class DocumentChunk(Base):
         SQLEnum(EmbeddingStatus, native_enum=False),
         default=EmbeddingStatus.PENDING,
         nullable=False,
+        index=True,
     )
 
     metadata_chunk: Mapped[dict] = mapped_column(

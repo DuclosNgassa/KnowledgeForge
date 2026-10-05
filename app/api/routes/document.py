@@ -7,6 +7,7 @@ from fastapi.params import Depends
 from app.dependencies import get_current_user_info, get_document_uploader, get_ingestion_service
 from app.ingestion.ingestion_service import IngestionService
 from app.schemas.document import DocumentUrlRequest
+from app.schemas.document_response import DocumentResponse
 from app.services.document_uploader import DocumentUploader, upload_and_save_document
 
 router = APIRouter(
@@ -23,7 +24,7 @@ knowledge_base_id: optional UUID
 """
 
 
-@router.post("")
+@router.post("", response_model=DocumentResponse, status_code=201)
 async def upload_document(
         ingestion_service: Annotated[IngestionService, Depends(get_ingestion_service)],
         request: Request,
@@ -40,7 +41,7 @@ async def upload_document(
         request_id,
     )
 
-    await ingestion_service.ingest(
+    document = await ingestion_service.ingest(
         document_id=document_id,
         extension=extension,
         file_path=file_path,
@@ -48,6 +49,8 @@ async def upload_document(
         user_id=user_id,
         knowledge_base_id=knowledge_base_id,
     )
+
+    return DocumentResponse.model_validate(document)
 
 
 # TODO start the ingestion as background task
@@ -62,7 +65,6 @@ Content-Type: application/json
     "knowledge_base_id": "..."
 }
 """
-
 
 @router.post("/url")
 async def upload_from_url(

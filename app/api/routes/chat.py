@@ -6,7 +6,7 @@ from app.dependencies import get_agent_service, get_chat_session_service, get_cu
     get_chat_message_service
 from app.schemas.agent_response import AgentResponse
 from app.schemas.chat_request import ChatRequest
-from app.schemas.chat_session_response import ChatSessionResponse, ChatMessageResponse, ChatMessagesResponse
+from app.schemas.chat_session_response import ChatSessionResponse, ChatMessagesResponse
 from app.services.agent_service import AgentService
 from app.services.chat_message_service import ChatMessageService
 from app.services.chat_session_service import ChatSessionService

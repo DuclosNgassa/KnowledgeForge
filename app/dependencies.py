@@ -10,6 +10,7 @@ from app.ingestion.chunker.document_chunker import DocumentChunkService
 from app.auth.dependencies import AccessTokenBearer
 from app.core.db.database import get_db
 from app.ingestion.embeddings.embedding_provider import EmbeddingProvider
+from app.ingestion.embeddings.embedding_provider_type import EmbeddingProviderType
 from app.ingestion.embeddings.google_provider import GoogleEmbeddingProvider
 from app.ingestion.embeddings.openai_provider import OpenAIEmbeddingProvider
 from app.ingestion.ingestion_service import IngestionService
@@ -91,6 +92,14 @@ def get_google_embedding_provider(model: str = settings.google_embedding_model) 
     return GoogleEmbeddingProvider(
         model=model,
     )
+
+
+def get_embedding_provider(provider: EmbeddingProviderType) -> EmbeddingProvider:
+    if provider == EmbeddingProviderType.GEMINI:
+        return get_google_embedding_provider()
+    elif provider == EmbeddingProviderType.OPENAI:
+        return get_openai_embedding_provider()
+    raise ValueError(f"Unknown embedding provider {provider}")
 
 
 def get_embedding_service(

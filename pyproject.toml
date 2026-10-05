@@ -71,6 +71,8 @@ dependencies = [
     "sqlalchemy==2.0.52",
     "sqlmodel==0.0.42",
     "starlette==1.6.0",
+    "taskiq>=0.13.0",
+    "taskiq-redis>=1.2.4",
     "typer==0.27.2",
     "typing-extensions==4.16.0",
     "typing-inspection==0.4.4",

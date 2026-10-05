@@ -59,7 +59,7 @@ class DocumentUploader:
             file_name=url,
             document_type="WEB",
             source=url,
-            status=DocumentStatus.COMPLETED,
+            status=DocumentStatus.UPLOADED,
         )
 
         return document, loaded_documents

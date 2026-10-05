@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ingestion.models.embedding_status import EmbeddingStatus
@@ -98,3 +98,19 @@ class DocumentChunkRepository:
         result = await self.session.execute(stmt)
 
         return result.all()
+
+    async def find_by_ids(self, chunk_ids: list[UUID]) -> list[DocumentChunk]:
+        query = select(
+            DocumentChunk
+        ).where(DocumentChunk.id.in_(chunk_ids))
+
+        result = await self.session.execute(query)
+
+        return list(result.scalars().all())
+
+    async def mark_failed(self, chunk_ids: list[UUID]) -> None:
+        await self.session.execute(
+            update(DocumentChunk)
+            .where(DocumentChunk.id.in_(chunk_ids))
+            .values(embedding_status=EmbeddingStatus.FAILED)
+        )
