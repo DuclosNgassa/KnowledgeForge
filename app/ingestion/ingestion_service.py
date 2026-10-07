@@ -65,7 +65,7 @@ class IngestionService:
                     content=chunk.content,
                     chunk_index=chunk.chunk_index,
                     page_number=chunk.metadata.get("page", 0) + 1,
-                    metadata_chunk=chunk.metadata,
+                    metadata_chunk={**chunk.metadata, "page": chunk.metadata.get("page", 0) + 1},
                     embedding_status=EmbeddingStatus.PENDING,
                 )
                 for chunk in chunks
