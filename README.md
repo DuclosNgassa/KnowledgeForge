@@ -712,5 +712,5 @@ Generate Answer
 #### Start the Taskiq worker
 
 ```
-uv run taskiq worker --app-dir . --workers 1 app.workers.broker:broker app.workers.embedding_tasks
+uv run taskiq worker --app-dir . --workers 1 app.workers.worker:broker app.workers.tasks.embedding_tasks
 ```

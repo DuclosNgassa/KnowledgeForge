@@ -122,7 +122,8 @@ def get_agent_service(
 ) -> AgentService:
     request_id = request.state.request_id
 
-    embedding_provider = get_google_embedding_provider()
+    #    embedding_provider = get_google_embedding_provider()
+    embedding_provider = get_openai_embedding_provider()
 
     search_service = SearchService(
         document_chunk_repository=DocumentChunkRepository(session),

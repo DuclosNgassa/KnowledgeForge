@@ -11,7 +11,7 @@ from app.models import Document, DocumentChunk
 from app.observability.logging import logger
 from app.schemas.document_chunk import DocumentChunkData
 from app.services.document_service import DocumentService
-from app.workers.embedding_tasks import embed_document
+from app.workers.tasks import embed_document
 
 
 class IngestionService:

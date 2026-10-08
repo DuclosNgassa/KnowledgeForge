@@ -14,7 +14,10 @@ from app.repositories.document_repository import DocumentRepository
 from app.workers.broker import broker
 
 
-@broker.task
+@broker.task(
+    retry_on_error=True,
+    max_retries=3,
+)
 async def embed_document(
         document_id_str: str | None = None,
 ):
@@ -88,7 +91,6 @@ async def embed_document(
     )
 
     return total_embedded
-
 
 def get_google_embedding_provider(model: str = settings.google_embedding_model) -> EmbeddingProvider:
     return GoogleEmbeddingProvider(

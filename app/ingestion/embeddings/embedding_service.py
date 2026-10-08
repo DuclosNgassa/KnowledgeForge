@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ingestion.embeddings.embedding_provider import EmbeddingProvider
 from app.ingestion.models.embedding_status import EmbeddingStatus
+from app.observability.logging import logger
 from app.repositories.document_chunk_repository import DocumentChunkRepository
 
 
@@ -21,7 +22,7 @@ class EmbeddingService:
     async def process_pending_chunks(self,
                                      document_id: UUID | None = None,
                                      limit: int = 100) -> int:
-        chunks = await self.repository.find_pending(document_id=document_id, limit=limit)
+        chunks = await self.repository.find_pending_chunks(document_id=document_id, limit=limit)
 
         if not chunks:
             return 0
@@ -39,7 +40,14 @@ class EmbeddingService:
                 for chunk in chunks
             ]
 
-            embeddings = await self.embedding_provider.embed_documents(texts)
+            try:
+                embeddings = await self.embedding_provider.embed_documents(texts)
+            except Exception as e:
+                logger.exception(
+                    "Embedding failed for document %s. [exception: %s]",
+                    document_id, e,
+                )
+                raise
 
             if len(embeddings) != len(chunks):
                 raise ValueError(
@@ -67,7 +75,7 @@ class EmbeddingService:
             self,
             document_id: UUID | None = None,
             limit: int = 100) -> list[UUID]:
-        chunks = await self.repository.find_pending(document_id=document_id, limit=limit)
+        chunks = await self.repository.find_pending_chunks(document_id=document_id, limit=limit)
 
         if not chunks:
             return []
@@ -111,6 +119,10 @@ class EmbeddingService:
             return len(chunks)
 
         except Exception:
+            logger.exception(
+                "Embedding failed for chunks %s",
+                chunk_ids,
+            )
             await self.repository.mark_failed(chunk_ids)
             await self.session.commit()
             raise
