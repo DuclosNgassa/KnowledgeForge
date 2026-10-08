@@ -22,13 +22,16 @@ class DocumentChunkRepository:
 
         return chunks
 
-    async def find_pending(self,
-                           document_id: UUID | None = None,
-                           limit: int = 100) -> list[DocumentChunk]:
+    async def find_pending_chunks(self,
+                                  document_id: UUID | None = None,
+                                  limit: int = 100) -> list[DocumentChunk]:
         query = select(
             DocumentChunk
         ).where(
-            DocumentChunk.embedding_status == EmbeddingStatus.PENDING
+            DocumentChunk.embedding_status.in_([
+                EmbeddingStatus.PENDING,
+                EmbeddingStatus.FAILED
+            ])
         ).order_by(
             DocumentChunk.created_at
         ).limit(limit)
@@ -37,6 +40,23 @@ class DocumentChunkRepository:
             query = query.where(
                 DocumentChunk.document_id == document_id
             )
+
+        result = await self.session.execute(query)
+
+        return list(result.scalars().all())
+
+    async def find_documents_with_pending_chunks(self, ) -> list[UUID]:
+        query = (
+            select(DocumentChunk.document_id)
+            .where(
+                DocumentChunk.embedding_status.in_([
+                    EmbeddingStatus.PENDING,
+                    EmbeddingStatus.FAILED
+                ])
+            )
+            .where(DocumentChunk.document_id.is_not(None))
+            .distinct()
+        )
 
         result = await self.session.execute(query)
 
