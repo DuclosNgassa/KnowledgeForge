@@ -13,9 +13,9 @@ class AgentResponse(BaseModel):
 class SourceReference(BaseModel):
     chunk_id: UUID | None = None
     document_id: UUID
+    page_number: int | None = None
     filename: str
     content: str
-    page_number: int | None = None
 
 
 class WebSource(BaseModel):

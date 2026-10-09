@@ -1,0 +1,149 @@
+Reference
+Python Standard Library
+The Python standard library includes a wide variety of modules and packages that can help you accomplish many common programming tasks, from file input/output (I/O), regular expressions, and mathematical operations to networking, data serialization, and working with dates and times. This wide range of functionality is why the Python community often says that Python is batteries-included.
+
+The standard library is designed to be both broad and deep. It includes modules for low-level system interaction like os, sys, and subprocess, as well as high-level tools like csv for handling structured text, json for working with JSON data, http.server for creating simple web servers, and sqlite3 for embedded databases.
+
+You’ll also find powerful utilities like itertools and functools for functional programming patterns, collections for specialized data structures, and more.
+
+Because these modules are part of the Python distribution itself, you don’t need to install anything separately. That makes it easy to write portable, efficient programs that work out of the box across different environments and platforms.
+
+In practice, the standard library covers a wide variety of use cases, including:
+
+System scripting and automation
+Web development
+Text and data processing
+Basic networking and client-server communication
+Concurrency and multithreading
+Data storage and serialization
+In short, the standard library is one of Python’s greatest strengths. It helps you do more with less by reducing the need for external dependencies while encouraging idiomatic, readable code.
+
+Not sure which term you need? Describe what you’re trying to do, and Mentor AI will point you to the right entries.
+
+abc Provides infrastructure for defining Abstract Base Classes (ABCs).
+argparse Provides a framework for creating user-friendly command-line interfaces (CLI).
+array Provides an efficient data structure for creating arrays of values, which are stored more compactly than in standard lists.
+ast Provides functionality to work with Abstract Syntax Trees (ASTs).
+asyncio Provides a framework for writing asynchronous programs using coroutines, event loops, and tasks.
+atexit Provides an interface for registering functions to be executed upon the program’s normal termination.
+base64 A Python standard library module for encoding binary data as ASCII text using Base16, Base32, Base64, and Base85 schemes.
+bdb A Python standard library module that provides a generic debugger framework for setting breakpoints, stepping through code, and managing trace events.
+binascii A Python standard library module that provides C-based functions for converting between binary data and ASCII-encoded representations such as hex, base64, and quoted-printable.
+builtins Provides direct access to all built-in identifiers, including functions, types, exceptions, and constants, primarily useful when a built-in name has been shadowed.
+bz2 Provides support for compressing and decompressing data using the bzip2 algorithm.
+calendar Provides classes and functions for calendar operations.
+cmath Provides mathematical functions for complex numbers, including power, logarithmic, trigonometric, hyperbolic, and polar coordinate conversions.
+cmd Provides a framework for building line-oriented command interpreters by subclassing the Cmd class to create interactive shells with automatic help and tab completion.
+code Provides classes and functions for implementing read-eval-print loops and embedding interactive interpreter consoles in applications.
+codecs Defines base classes for standard codecs and provides access to the codec registry for encoding and decoding text and binary data.
+codeop Provides utilities for incrementally compiling Python source code and tracking future statements.
+collections Provides specialized container data types that extend the capabilities of Python’s built-in containers like lists, tuples, sets, and dictionaries.
+colorsys Provides bidirectional conversion functions between the RGB color space and the YIQ, HLS, and HSV color coordinate systems.
+compileall Provides utilities for byte-compiling Python source files into bytecode across a directory tree, a single file, or all locations on sys.path.
+configparser Provides tools for handling configuration files.
+contextlib Provides utilities for working with context managers, allowing you to allocate and release resources precisely.
+contextvars Supports managing context state, allowing you to store and retrieve data that is local to a context.
+copy Provides functionality to create shallow and deep copies of objects in Python.
+copyreg Provides a registry for defining custom pickling and copying functions for specific object types.
+cProfile Provides a way to measure where time is being spent in your application.
+csv Provides functionality to read from and write to CSV (comma-separated values) files.
+ctypes Allows for calling functions in shared C libraries and DLLs using C-compatible data types.
+curses Provides tools for building text-based user interfaces in Unix terminals, providing control over cursor position, colors, windows, and keyboard input.
+dataclasses Provides functionality for creating user-defined data classes.
+datetime Contains classes and tools for manipulating dates and times.
+dbm Provides a generic dictionary-like interface to DBM-style key-value databases backed by a file on disk.
+decimal Provides support for correctly rounded decimal floating-point arithmetic.
+difflib Provides classes and functions for comparing sequences and generating human-readable difference reports between text, strings, and other sequences.
+dis Provides tools for disassembling CPython bytecode into human-readable instructions for debugging and performance analysis.
+doctest Provides tools for testing your code by running tests embedded in docstrings.
+email Provides a library for managing email messages.
+encodings Implements the codec registry lookup and encoding name normalization infrastructure.
+enum Provides support for enumerations of constant values known as members.
+errno Provides named integer constants for POSIX error codes, used to identify the specific cause of an OSError.
+faulthandler A Python standard library module that dumps Python tracebacks on fatal signals and interpreter crashes, helping diagnose segmentation faults, deadlocks, and other low-level failures.
+filecmp Provides tools for comparing files and directory trees, with a caching layer for efficiency and a dircmp class for recursive directory analysis.
+fileinput Provides tools for iterating over lines from multiple input files or standard input, with support for in-place file editing.
+fnmatch Provides tools for Unix shell-style wildcard pattern matching against filename strings.
+fractions Provides support for rational number arithmetic.
+ftplib Provides tools for connecting to FTP servers and transferring files using the File Transfer Protocol (FTP).
+functools Provides higher-order functions and operations on callable objects.
+gc Provides an interface to the garbage collection facility for Python.
+getopt Provides tools for parsing command line options from sys.argv following Unix getopt() conventions, with support for both short and long option styles.
+getpass Provides portable password prompting without echoing input to the terminal, and a helper for retrieving the current user’s login name.
+gettext Provides internationalization (I18N) and localization (L10N) services for your Python applications.
+glob Provides tools to find path names matching specified patterns that follow Unix shell rules.
+graphlib Provides tools for performing topological sorting of directed acyclic graphs through the TopologicalSorter class.
+grp Provides an interface to the Unix group database for looking up group entries by name or numeric ID.
+gzip Provides a user-friendly interface for reading, writing, compressing, and decompressing gzip files and in-memory bytes.
+hashlib Provides a common interface to many hash algorithms, including secure hash functions like SHA-256 and legacy algorithms like MD5.
+heapq Provides an implementation of the heap queue algorithm, also known as the priority queue algorithm.
+hmac Provides tools for computing Hash-based Message Authentication Codes (HMAC) to verify the integrity and authenticity of messages.
+html Provides utilities for manipulating HTML data, including escaping and unescaping HTML entities and tags.
+http Provides a set of modules for working with HTTP requests and responses.
+imaplib Provides tools for interacting with mail servers using the Internet Message Access Protocol (IMAP).
+importlib Provides the pure-Python implementation of the import statement and exposes the import system for importing modules programmatically or building custom importers.
+inspect Provides several useful functions to help you get information about live objects, such as modules, classes, methods, functions, tracebacks, frame objects, and code objects.
+io Provides the main facilities for dealing with various types of I/O, including reading and writing files, handling binary data, and working with streams.
+ipaddress Provides the capabilities to create, manipulate, and operate on IPv4 and IPv6 addresses.
+itertools Provides a collection of tools to perform fast and memory-efficient iteration.
+json Provides tools to encode and decode data in JavaScript Object Notation (JSON).
+keyword Provides functionality to work with Python’s reserved keywords.
+linecache Provides random access to individual lines from text files and Python source modules, caching file contents in memory to avoid rereading from disk.
+locale Provides a way to handle operations related to the localization of programs, such as formatting numbers, dates, and currencies according to the conventions of different locales.
+logging Provides a framework for generating log messages from Python programs.
+lzma Provides an interface for reading, writing, compressing, and decompressing .xz and legacy .lzma files with the LZMA algorithm.
+mailbox Provides an interface for reading, creating, and modifying on-disk mailboxes in Maildir, mbox, MH, Babyl, and MMDF formats.
+marshal Provides a compact binary serialization format for built-in Python objects and code objects, primarily used to read and write .pyc files.
+math Provides a comprehensive collection of mathematical functions and constants.
+mimetypes Provides tools to map filenames to MIME types and vice versa.
+mmap Maps files or devices into memory.
+modulefinder Provides an interface for statically analyzing a Python script and reporting every module it imports.
+msvcrt Provides Windows-only console I/O, file locking, and file-descriptor routines from the Microsoft Visual C++ runtime.
+multiprocessing Allows you to create parallel programs by leveraging multiple processors on your machine.
+netrc Provides tools for parsing .netrc credentials files and looking up logins, accounts, and passwords by host.
+numbers Provides an abstract hierarchy of numeric types.
+operator Provides functions that correspond to the Python operators.
+optparse Provides a declarative parser for command-line options that predates argparse and remains useful for legacy scripts and precise argument handling.
+os Provides tools for using operating system-dependent functionality.
+pathlib Provides an object-oriented approach to handling file system paths.
+pickle Provides tools to serialize and deserialize Python objects.
+pickletools Provides tools for disassembling, inspecting, and optimizing pickle streams without executing the stored objects.
+pkgutil Provides import system utilities for discovering installed modules, walking package hierarchies, reading binary resources bundled in packages, and resolving dotted name strings to Python objects.
+platform Provides access to underlying platform-specific data, such as the operating system, interpreter, and hardware architecture.
+plistlib Provides an interface for reading and writing Apple .plist property list files in both XML and binary formats.
+poplib Provides an interface to the Post Office Protocol version 3 (POP3) for downloading, listing, and deleting email messages on a mail server.
+posix Provides an interface to the Unix system calls standardized by POSIX, re-exported by the portable os module.
+pprint Provides the capability to pretty-print data structures in a readable and easy-to-understand way.
+profile Provides a pure-Python deterministic profiler that records function call counts and execution times for analysis through the pstats module.
+pstats Provides a Stats class for reading, sorting, filtering, and printing profiling data produced by cProfile and profile.
+queue Provides reliable thread-safe implementations of the queue data structure.
+random Provides tools for generating random numbers and performing random operations.
+re Provides support for working with regular expressions.
+secrets Provides a straightforward and secure way to generate cryptographically strong random numbers.
+shutil Provides a higher-level interface for file operations, including copying and removal.
+socket Provides a low-level networking interface that allows you to create and use sockets for network communication.
+sqlite3 Provides an interface for interacting with SQLite databases.
+string Provides a collection of string constants and utility functions for common string operations.
+subprocess Allows you to spawn new processes, connect to their input/output/error pipes, and obtain their return codes.
+sys Provides access to system-specific parameters and functions.
+sysconfig Provides access to Python’s configuration information, which includes details about the installation paths, the build environment, and platform-specific settings.
+tarfile Provides a powerful and flexible way to read and write tar archives.
+tempfile Provides a simple way to create temporary files and directories.
+threading Provides a higher-level interface for working with threads.
+time Provides various time-related functions.
+timeit Provides a simple way to measure the execution time of small code snippets.
+tkinter Provides a powerful object-oriented interface to the Tk GUI toolkit.
+tomllib Provides a simple way to parse TOML files.
+traceback Provides utilities for working with error tracebacks.
+turtle Provides tools to create pictures and shapes by controlling a turtle that draws on a canvas.
+typing Provides support for type hints.
+unittest Provides a framework for creating and running unit tests.
+urllib Provides a collection of modules for working with URLs.
+uuid Provides a way to generate universally unique identifiers (UUIDs).
+venv Provides support for creating isolated Python environments.
+wave Provides an interface to read and write WAV files.
+weakref Provides tools for creating weak references to objects.
+webbrowser Provides a high-level interface to allow displaying web-based documents to users.
+xml Provides tools for parsing and creating XML documents.
+zipapp Provides tools for creating standalone executable Python applications packaged as ZIP files.
+zipfile Provides tools to create, read, write, and extract ZIP archives.

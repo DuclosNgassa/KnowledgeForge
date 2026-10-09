@@ -8,6 +8,7 @@ from app.schemas.agent_response import AgentResponse
 from langfuse.langchain import CallbackHandler
 
 from app.services.chat_message_service import ChatMessageService, to_langchain_message
+from app.observability.logging import logger
 
 MAX_HISTORY_MESSAGES = 20
 
@@ -25,11 +26,11 @@ class AgentService:
                    message: str,
                    chat_session: ChatSession,
                    ) -> AgentResponse:
-        history = await self.chat_message_service.get_history(
-            session_id=chat_session.id,
-            limit=MAX_HISTORY_MESSAGES,
-        )
-
+        #        history = await self.chat_message_service.get_history(
+        #           session_id=chat_session.id,
+        #          limit=MAX_HISTORY_MESSAGES,
+        #     )
+        history = []
         messages = to_langchain_message(history)
 
         messages.append(HumanMessage(content=message))
@@ -54,6 +55,17 @@ class AgentService:
                     config={
                         "callbacks": [langfuse_handler],
                     }
+                )
+            # TODO better handling of none agent_response
+            logger.info("Agent response keys: %s", response.keys())
+            logger.info("Full agent response: %r", response)
+
+            agent_response = response.get("structured_response")
+
+            if agent_response is None:
+                raise RuntimeError(
+                    "Agent did not return structured_response. "
+                    f"Available keys: {list(response.keys())}"
                 )
 
             agent_response = response["structured_response"]
