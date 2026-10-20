@@ -33,6 +33,7 @@ def create_search_documents_tool(
 
         # print("Search result before reranking: ", results)
 
+        # TODO use OPENAI as Reranker?
         reranked_results = await reranker.rerank(
             query=query,
             results=results,

@@ -8,7 +8,7 @@ from app.schemas.search_result import SearchResult
 
 
 def _reciprocal_rank_fusion(
-        result_lists,
+        result_lists: list[list[SearchResult]],
         k: int = 60,
 ) -> list[SearchResult]:
     with langfuse.start_as_current_observation(
@@ -140,9 +140,9 @@ class SearchService:
             self,
             query: str,
             user_id: UUID,
-            limit: int = 10,
+            limit: int = 20,
             request_id: str | None = None,
-    ):
+    ) -> list[SearchResult]:
         # 1. Semantic search
         with langfuse.start_as_current_observation(
                 as_type="span",
@@ -155,7 +155,7 @@ class SearchService:
             vector_results = await self.do_similarity_search(
                 query=query,
                 user_id=user_id,
-                limit=20,
+                limit=limit,
             )
 
             # print("Result of semantic search: ", vector_results)
@@ -164,7 +164,7 @@ class SearchService:
             keyword_results = await self.do_keyword_search(
                 query=query,
                 user_id=user_id,
-                limit=20,
+                limit=limit,
             )
 
             # print("Result of keyword search: ", vector_results)

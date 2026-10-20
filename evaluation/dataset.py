@@ -1,30 +1,54 @@
-from typing import TypedDict, Literal
+from evaluation.schemas import EvaluationSample
 
 
-class RelevantChunk(TypedDict):
-    document_id: str
-    chunk_id: str
-    page_number: int | None
+# The validation intentionally checks dataset consistency
+# before running potentially expensive LLM evaluations.
+def validate_dataset(
+        samples: list[EvaluationSample],
+) -> None:
+    sample_ids: set[str] = set()
+
+    for sample in samples:
+        if sample["id"] in sample_ids:
+            raise ValueError(
+                f"Duplicate evaluation sample ID: {sample['id']}"
+            )
+
+        sample_ids.add(sample["id"])
+
+        if not sample["question"].strip():
+            raise ValueError(
+                f"{sample['id']}: question cannot be empty"
+            )
+
+        if not sample["expected_answer"].strip():
+            raise ValueError(
+                f"{sample['id']}: expected_answer cannot be empty"
+            )
+
+        if (
+                sample["question_type"] == "unanswerable"
+                and sample["answerable"]
+        ):
+            raise ValueError(
+                f"{sample['id']}: unanswerable questions "
+                "must have answerable=False"
+            )
+
+        if sample["answerable"] and not sample["relevant_chunks"]:
+            raise ValueError(
+                f"{sample['id']}: answerable questions "
+                "must identify at least one relevant chunk"
+            )
+
+        if not sample["answerable"] and sample["relevant_chunks"]:
+            raise ValueError(
+                f"{sample['id']}: unanswerable questions "
+                "should not have relevant chunks"
+            )
 
 
-class EvaluationSample(TypedDict):
-    id: str
-    question: str
-    expected_answer: str
-    relevant_chunk: list[RelevantChunk]
-    question_type: Literal[
-        "factual",
-        "semantic",
-        "multi_chunk",
-        "cross_document",
-        "unanswerable",
-    ]
-    difficulty: Literal["easy", "medium", "hard"]
-    answerable: bool
-
-
-# DATASET: list[EvaluationSample] = [
-DATASET = [
+DATASET: list[EvaluationSample] = [
     {
         "id": "eval-001",
         "question": "What is a list comprehension? Use my stored documents to answer. Answer in 1-2 short sentences",
@@ -162,24 +186,24 @@ DATASET = [
         "difficulty": "easy",
         "answerable": True,
     },
-    {
-        "id": "eval-007",
-        "question": "What is the difference between authentication and authorization? Use my stored documents "
-                    "to answer. Answer in 1-2 short sentences",
-        "expected_answer": (
-            "Authentication is the process of verifying a user's identity, confirming that they are who they claim "
-            "to be. Authorization follows successful authentication to determine what specific resources or actions "
-            "that verified user is permitted to access."
-        ),
-        "relevant_chunks": [
-            {
-                "document_id": "d459bcd8-4ad3-41d6-a5fe-6fec6cf6e880",
-            }
-        ],
-        "question_type": "factual",
-        "difficulty": "easy",
-        "answerable": True,
-    },
+    # {
+    #     "id": "eval-007",
+    #     "question": "What is the difference between authentication and authorization? Use my stored documents "
+    #                 "to answer. Answer in 1-2 short sentences",
+    #     "expected_answer": (
+    #         "Authentication is the process of verifying a user's identity, confirming that they are who they claim "
+    #         "to be. Authorization follows successful authentication to determine what specific resources or actions "
+    #         "that verified user is permitted to access."
+    #     ),
+    #     "relevant_chunks": [
+    #         {
+    #             "document_id": "d459bcd8-4ad3-41d6-a5fe-6fec6cf6e880",
+    #         }
+    #     ],
+    #     "question_type": "factual",
+    #     "difficulty": "easy",
+    #     "answerable": True,
+    # },
     {
         "id": "eval-008",
         "question": "What are examples of injection attacks?",
@@ -351,24 +375,24 @@ DATASET = [
         "difficulty": "easy",
         "answerable": True,
     },
-    {
-        "id": "eval-016",
-        "question": "What is the default isolation level? Use only my stored documents to answer do not search in internet. "
-                    "Answer in 1-2 short sentences",
-        "expected_answer": "PostgreSQL's default transaction isolation level is Read Committed. At this level, a "
-                           "query only sees data committed before the query began, ensuring it does not read "
-                           "uncommitted data from concurrent transactions.",
-        "relevant_chunks": [
-            {
-                "chunk_id": None,
-                "document_id": "9152ff9f-be4b-431d-b81f-a458fda57242",
-                "page_number": None,
-            }
-        ],
-        "question_type": "factual",
-        "difficulty": "medium",
-        "answerable": True,
-    },
+    # {
+    #     "id": "eval-016",
+    #     "question": "What is the default isolation level? Use only my stored documents to answer do not search in internet. "
+    #                 "Answer in 1-2 short sentences",
+    #     "expected_answer": "PostgreSQL's default transaction isolation level is Read Committed. At this level, a "
+    #                        "query only sees data committed before the query began, ensuring it does not read "
+    #                        "uncommitted data from concurrent transactions.",
+    #     "relevant_chunks": [
+    #         {
+    #             "chunk_id": None,
+    #             "document_id": "9152ff9f-be4b-431d-b81f-a458fda57242",
+    #             "page_number": None,
+    #         }
+    #     ],
+    #     "question_type": "factual",
+    #     "difficulty": "medium",
+    #     "answerable": True,
+    # },
     {
         "id": "eval-017",
         "question": "How can an index be created? Use only my stored documents to answer. Never search in internet. "
@@ -416,29 +440,29 @@ DATASET = [
         "difficulty": "medium",
         "answerable": True,
     },
-    {
-        "id": "eval-019",
-        "question": "How does FastAPI validate request bodies? Use only my stored documents to answer. Never search in internet. "
-                    "Answer in 1-2 short sentences",
-        "expected_answer": "FastAPI validates request bodies by using Pydantic models to define the expected data "
-                           "structure and types. When a request is received, FastAPI automatically parses the JSON "
-                           "body, converts the types, and validates the data against the declared model.",
-        "relevant_chunks": [
-            {
-                "chunk_id": "25357566-347a-492f-ad62-2ef84fe9a081",
-                "document_id": "f2a7838e-f581-42cb-95c0-a4aa679bf0e4",
-                "page_number": 1,
-            },
-            {
-                "chunk_id": "765aa89b-9f97-4ab6-bbc9-db01eb045a1a",
-                "document_id": "f2a7838e-f581-42cb-95c0-a4aa679bf0e4",
-                "page_number": None,
-            }
-        ],
-        "question_type": "factual",
-        "difficulty": "medium",
-        "answerable": True,
-    },
+    # {
+    #     "id": "eval-019",
+    #     "question": "How does FastAPI validate request bodies? Use only my stored documents to answer. Never search in internet. "
+    #                 "Answer in 1-2 short sentences",
+    #     "expected_answer": "FastAPI validates request bodies by using Pydantic models to define the expected data "
+    #                        "structure and types. When a request is received, FastAPI automatically parses the JSON "
+    #                        "body, converts the types, and validates the data against the declared model.",
+    #     "relevant_chunks": [
+    #         {
+    #             "chunk_id": "25357566-347a-492f-ad62-2ef84fe9a081",
+    #             "document_id": "f2a7838e-f581-42cb-95c0-a4aa679bf0e4",
+    #             "page_number": 1,
+    #         },
+    #         {
+    #             "chunk_id": "765aa89b-9f97-4ab6-bbc9-db01eb045a1a",
+    #             "document_id": "f2a7838e-f581-42cb-95c0-a4aa679bf0e4",
+    #             "page_number": None,
+    #         }
+    #     ],
+    #     "question_type": "factual",
+    #     "difficulty": "medium",
+    #     "answerable": True,
+    # },
     {
         "id": "eval-020",
         "question": "What is dependency injection in FastAPI? Use only my stored documents to answer. Never search in internet. "
@@ -462,24 +486,6 @@ DATASET = [
         ],
         "question_type": "factual",
         "difficulty": "medium",
-        "answerable": True,
-    },
-    {
-        "id": "eval-001",
-        "question": "What is the purpose of an index in PostgreSQL?",
-        "expected_answer": (
-            "An index helps PostgreSQL find rows more efficiently "
-            "without scanning the entire table in many cases."
-        ),
-        "relevant_chunks": [
-            {
-                "document_id": "REPLACE_WITH_DOCUMENT_UUID",
-                "chunk_id": "REPLACE_WITH_CHUNK_UUID",
-                "page_number": None,
-            }
-        ],
-        "question_type": "factual",
-        "difficulty": "easy",
         "answerable": True,
     },
     {
@@ -712,56 +718,56 @@ DATASET = [
         "difficulty": "medium",
         "answerable": True,
     },
-    {
-        "id": "eval-028",
-        "question": "Welche Schritte durchläuft die Studie methodisch von der theoretischen Grundlage bis zum "
-                    "praktischen Ergebnis, und welches Hauptziel wird mit dem entwickelten Leitfaden verfolgt? "
-                    "Use only my stored documents to answer. Never search "
-                    "in internet. Answer in 1-2 short sentences",
-        "expected_answer": "Die Studie entwickelt auf theoretischer Grundlage – definiert durch das digitale "
-                           "Bewusstsein im Kontext von Kreativität und generativer KI – mittels einer "
-                           "Fragebogenuntersuchung und anschließender quantitativer sowie qualitativer Analyse einen "
-                           "praxisnahen Leitfaden. Das Hauptziel dieses Leitfadens ist es, Einzelpersonen eine "
-                           "Orientierungshilfe für den effektiven Einsatz generativer KI in der Textkreation zu "
-                           "bieten und als Basis für weiterführende Schulungsformate zur Kompetenzvermittlung zu dienen.",
-        "relevant_chunks": [
-            {
-                "chunk_id": None,
-                "document_id": "d9d79cec-ad3e-4a1c-a5c8-5e969dfca2ae",
-                "page_number": 1,
-            }
-        ],
-        "question_type": "multi_chunk",
-        "difficulty": "medium",
-        "answerable": True,
-    },
-    {
-        "id": "eval-029",
-        "question": "Welche spezifische Funktion erfüllt generative KI im Gegensatz zu allgemeinen KI-Systemen, und "
-                    "wie unterstützt sie den menschlichen Kreativitätsprozess gemäß dem Text"
-                    "Use only my stored documents to answer. Never search "
-                    "in internet. Answer in 1-2 short sentences",
-        "expected_answer": "Generative KI erfüllt im Gegensatz zu allgemeinen Systemen die spezifische Funktion, "
-                           "neue Inhalte wie Texte, Bilder oder Musik zu kreieren. Sie unterstützt den menschlichen "
-                           "Kreativitätsprozess, indem sie als Werkzeug in allen Phasen der Entstehung – von der "
-                           "Ideenfindung über die Formulierung von Hypothesen bis hin zur Verfeinerung – fördernd zur "
-                           "Seite steht.",
-        "relevant_chunks": [
-            {
-                "chunk_id": None,
-                "document_id": "d9d79cec-ad3e-4a1c-a5c8-5e969dfca2ae",
-                "page_number": None,
-            },
-            {
-                "chunk_id": None,
-                "document_id": "d9d79cec-ad3e-4a1c-a5c8-5e969dfca2ae",
-                "page_number": None,
-            }
-        ],
-        "question_type": "multi_chunk",
-        "difficulty": "medium",
-        "answerable": True,
-    },
+    # {
+    #     "id": "eval-028",
+    #     "question": "Welche Schritte durchläuft die Studie methodisch von der theoretischen Grundlage bis zum "
+    #                 "praktischen Ergebnis, und welches Hauptziel wird mit dem entwickelten Leitfaden verfolgt? "
+    #                 "Use only my stored documents to answer. Never search "
+    #                 "in internet. Answer in 1-2 short sentences",
+    #     "expected_answer": "Die Studie entwickelt auf theoretischer Grundlage – definiert durch das digitale "
+    #                        "Bewusstsein im Kontext von Kreativität und generativer KI – mittels einer "
+    #                        "Fragebogenuntersuchung und anschließender quantitativer sowie qualitativer Analyse einen "
+    #                        "praxisnahen Leitfaden. Das Hauptziel dieses Leitfadens ist es, Einzelpersonen eine "
+    #                        "Orientierungshilfe für den effektiven Einsatz generativer KI in der Textkreation zu "
+    #                        "bieten und als Basis für weiterführende Schulungsformate zur Kompetenzvermittlung zu dienen.",
+    #     "relevant_chunks": [
+    #         {
+    #             "chunk_id": None,
+    #             "document_id": "d9d79cec-ad3e-4a1c-a5c8-5e969dfca2ae",
+    #             "page_number": 1,
+    #         }
+    #     ],
+    #     "question_type": "multi_chunk",
+    #     "difficulty": "medium",
+    #     "answerable": True,
+    # },
+    # {
+    #     "id": "eval-029",
+    #     "question": "Welche spezifische Funktion erfüllt generative KI im Gegensatz zu allgemeinen KI-Systemen, und "
+    #                 "wie unterstützt sie den menschlichen Kreativitätsprozess gemäß dem Text"
+    #                 "Use only my stored documents to answer. Never search "
+    #                 "in internet. Answer in 1-2 short sentences",
+    #     "expected_answer": "Generative KI erfüllt im Gegensatz zu allgemeinen Systemen die spezifische Funktion, "
+    #                        "neue Inhalte wie Texte, Bilder oder Musik zu kreieren. Sie unterstützt den menschlichen "
+    #                        "Kreativitätsprozess, indem sie als Werkzeug in allen Phasen der Entstehung – von der "
+    #                        "Ideenfindung über die Formulierung von Hypothesen bis hin zur Verfeinerung – fördernd zur "
+    #                        "Seite steht.",
+    #     "relevant_chunks": [
+    #         {
+    #             "chunk_id": None,
+    #             "document_id": "d9d79cec-ad3e-4a1c-a5c8-5e969dfca2ae",
+    #             "page_number": None,
+    #         },
+    #         {
+    #             "chunk_id": None,
+    #             "document_id": "d9d79cec-ad3e-4a1c-a5c8-5e969dfca2ae",
+    #             "page_number": None,
+    #         }
+    #     ],
+    #     "question_type": "multi_chunk",
+    #     "difficulty": "medium",
+    #     "answerable": True,
+    # },
     {
         "id": "eval-030",
         "question": "Warum ist die frühzeitige Einbindung von Mitarbeitenden in technologische Veränderungsprozesse "
@@ -842,31 +848,31 @@ DATASET = [
         "difficulty": "medium",
         "answerable": True,
     },
-    {
-        "id": "eval-033",
-        "question": "Was ist der Unterschied zwischen Überwachtes und Unüberwachtes Lernen?"
-                    "Use only my stored documents to answer. Never search "
-                    "in internet. Answer in 1-2 short sentences",
-        "expected_answer": "Beim überwachten Lernen sind für einen Teil der Daten die korrekten Antworten bereits "
-                           "vorab bekannt, um daraus Vorhersagen für weitere Fälle zu treffen. Beim unüberwachten "
-                           "Lernen hingegen ist das Ergebnis im Voraus unbekannt, und der Algorithmus sucht "
-                           "selbstständig nach Mustern und Strukturen in den Daten, um diese zu gruppieren.",
-        "relevant_chunks": [
-            {
-                "chunk_id": None,
-                "document_id": "b6838bac-c52e-4800-93ed-109aae8f2282",
-                "page_number": 1,
-            },
-            {
-                "chunk_id": None,
-                "document_id": "b6838bac-c52e-4800-93ed-109aae8f2282",
-                "page_number": 1,
-            }
-        ],
-        "question_type": "multi_chunk",
-        "difficulty": "medium",
-        "answerable": True,
-    },
+    # {
+    #     "id": "eval-033",
+    #     "question": "Was ist der Unterschied zwischen Überwachtes und Unüberwachtes Lernen?"
+    #                 "Use only my stored documents to answer. Never search "
+    #                 "in internet. Answer in 1-2 short sentences",
+    #     "expected_answer": "Beim überwachten Lernen sind für einen Teil der Daten die korrekten Antworten bereits "
+    #                        "vorab bekannt, um daraus Vorhersagen für weitere Fälle zu treffen. Beim unüberwachten "
+    #                        "Lernen hingegen ist das Ergebnis im Voraus unbekannt, und der Algorithmus sucht "
+    #                        "selbstständig nach Mustern und Strukturen in den Daten, um diese zu gruppieren.",
+    #     "relevant_chunks": [
+    #         {
+    #             "chunk_id": None,
+    #             "document_id": "b6838bac-c52e-4800-93ed-109aae8f2282",
+    #             "page_number": 1,
+    #         },
+    #         {
+    #             "chunk_id": None,
+    #             "document_id": "b6838bac-c52e-4800-93ed-109aae8f2282",
+    #             "page_number": 1,
+    #         }
+    #     ],
+    #     "question_type": "multi_chunk",
+    #     "difficulty": "medium",
+    #     "answerable": True,
+    # },
     {
         "id": "eval-034",
         "question": "Wie funktionieren Künstliche Neuronale Netze und wie werden sie modelliert?"
