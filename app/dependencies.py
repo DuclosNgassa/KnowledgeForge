@@ -32,6 +32,7 @@ from app.services.reranker.base import Reranker
 from app.services.reranker.cohere_reranker import CohereReranker
 from app.services.search_service import SearchService
 from app.services.user_service import UserService
+from langchain.chat_models import init_chat_model
 
 
 def get_user_service(
@@ -122,6 +123,11 @@ def get_agent_service(
 ) -> AgentService:
     request_id = request.state.request_id
 
+    streaming_model = init_chat_model(
+        settings.google_chat_model,
+        streaming=True,
+    )
+
     #    embedding_provider = get_google_embedding_provider()
     embedding_provider = get_openai_embedding_provider()
 
@@ -145,7 +151,11 @@ def get_agent_service(
         request_id=request_id,
     )
 
-    return AgentService(agent=agent, chat_message_service=chat_message_service)
+    return AgentService(
+        agent=agent,
+        chat_message_service=chat_message_service,
+        streaming_model=streaming_model,
+    )
 
 
 def get_chat_session_service(

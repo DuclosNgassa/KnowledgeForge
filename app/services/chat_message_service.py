@@ -31,23 +31,16 @@ class ChatMessageService:
             session_id: UUID,
             role: MessageRole,
             content: str, ) -> ChatMessage:
-        print("add message {} with role {}".format(content, role))
+        # print("add message {} with role {}".format(content, role))
         return await self.repository.create(
             session_id=session_id,
             role=role,
             content=content
         )
 
-    async def get_messages(
+    async def get_messages_history(
             self,
             session_id: UUID,
             limit: int = 20
     ) -> list[ChatMessage]:
-        return await self.repository.get_messages(session_id=session_id, limit=limit)
-
-    async def get_history(
-            self,
-            session_id: UUID,
-            limit: int = 20
-    ) -> list[ChatMessage]:
-        return await self.repository.get_history(session_id=session_id, limit=limit)
+        return await self.repository.get_messages_history(session_id=session_id, limit=limit)

@@ -31,48 +31,7 @@ class ChatMessageRepository:
 
         return chat_message
 
-    async def get_history(
-            self,
-            session_id: UUID,
-            limit: int = 20,
-    ) -> list[ChatMessage]:
-        subquery = (
-            select(ChatMessage)
-            .where(ChatMessage.session_id == session_id)
-            .order_by(ChatMessage.created_at.desc())
-            .limit(limit)
-            .subquery()
-        )
-
-        stmt = (
-            select(ChatMessage)
-            .join(
-                subquery,
-                ChatMessage.id == subquery.c.id,
-            )
-            .order_by(ChatMessage.created_at.asc())
-        )
-
-        result = await self.session.execute(stmt)
-        return list(result.scalars().all())
-
-    async def get_history_old(self, session_id: UUID, limit: int = 20) -> list[ChatMessage]:
-        statement = (select(ChatMessage)
-                     .where(ChatMessage.session_id == session_id)
-                     .order_by(ChatMessage.created_at.desc())
-                     .limit(limit)
-                     )
-
-        results = await self.session.execute(statement)
-
-        messages = list(results.scalars().all())
-
-        # reverse messages to have the chronological order.
-        messages.reverse()
-
-        return messages
-
-    async def get_messages(self, session_id: UUID, limit: int = 20) -> list[ChatMessage]:
+    async def get_messages_history(self, session_id: UUID, limit: int = 20) -> list[ChatMessage]:
         statement = (select(ChatMessage)
                      .where(ChatMessage.session_id == session_id)
                      .order_by(ChatMessage.sequence_number.desc())
