@@ -34,6 +34,9 @@ from app.services.search_service import SearchService
 from app.services.user_service import UserService
 from langchain.chat_models import init_chat_model
 
+from app.services.retrieval_collector import RetrievalCollector
+from app.services.web_search_collector import WebSearchCollector
+
 
 def get_user_service(
         db: Annotated[AsyncSession, Depends(get_db)]
@@ -143,18 +146,25 @@ def get_agent_service(
 
     chat_message_service = get_chat_message_service(session)
 
+    collector = RetrievalCollector()
+    web_collector = WebSearchCollector()
+
     agent = create_agent(
         search_service=search_service,
         document_service=document_service,
         reranker=reranker,
         user_id=current_user_info["user_id"],
         request_id=request_id,
+        collector=collector,
+        web_collector=web_collector,
     )
 
     return AgentService(
         agent=agent,
         chat_message_service=chat_message_service,
         streaming_model=streaming_model,
+        retrieval_collector=collector,
+        web_search_collector=web_collector,
     )
 
 

@@ -5,6 +5,7 @@ from langchain_core.tools import tool
 from app.schemas.retrieved_document import RetrievedDocument
 from app.services.reranker.base import Reranker
 from app.services.search_service import SearchService
+from app.services.retrieval_collector import RetrievalCollector
 
 
 def create_search_documents_tool(
@@ -12,6 +13,7 @@ def create_search_documents_tool(
         reranker: Reranker,
         user_id: UUID,
         request_id: str | None = None,
+        collector: RetrievalCollector | None = None,
 ):
     @tool
     async def search_documents(query: str) -> list[RetrievedDocument]:
@@ -54,6 +56,8 @@ def create_search_documents_tool(
             for result in reranked_results
         ]
 
+        if collector is not None:
+            collector.add(retrieved_documents)
 
         return retrieved_documents
 

@@ -7,6 +7,8 @@ from app.agents.tools.document import create_get_document_metadata_tool
 from app.agents.tools.web_search import create_web_search_tool
 from app.core.settings import settings
 from app.schemas.agent_response import AgentResponse
+from app.services.retrieval_collector import RetrievalCollector
+from app.services.web_search_collector import WebSearchCollector
 
 
 def create_agent(
@@ -15,12 +17,15 @@ def create_agent(
         reranker,
         user_id,
         request_id,
+        collector: RetrievalCollector | None = None,
+        web_collector: WebSearchCollector | None = None,
 ):
     search_documents = create_search_documents_tool(
         search_service=search_service,
         reranker=reranker,
         user_id=user_id,
         request_id=request_id,
+        collector=collector,
     )
 
     get_document_metadata = create_get_document_metadata_tool(
@@ -33,7 +38,9 @@ def create_agent(
         user_id=user_id,
     )
 
-    web_search = create_web_search_tool()
+    web_search = create_web_search_tool(
+        collector=web_collector,
+    )
 
     return create_deep_agent(
         model=settings.google_chat_model,

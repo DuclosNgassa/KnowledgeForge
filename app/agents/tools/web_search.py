@@ -4,9 +4,12 @@ from langchain_tavily import TavilySearch
 from app.core.settings import settings
 from app.schemas.search_result import WebSearchResult
 from app.observability.langfuse import langfuse
+from app.services.web_search_collector import WebSearchCollector
 
 
-def create_web_search_tool():
+def create_web_search_tool(
+        collector: WebSearchCollector | None = None,
+):
     tavily = TavilySearch(
         max_result=5,
         topic="general",
@@ -48,6 +51,9 @@ def create_web_search_tool():
                 )
                 for result in response["results"]
             ]
+
+            if collector is not None:
+                collector.add(web_search_results)
 
             observation.update(
                 output={
