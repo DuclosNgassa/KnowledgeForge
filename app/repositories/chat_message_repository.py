@@ -1,10 +1,10 @@
 from uuid import UUID
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import ChatMessage
 from app.models.chat_message import MessageRole
+from sqlalchemy import func, select
 
 
 class ChatMessageRepository:
@@ -17,10 +17,12 @@ class ChatMessageRepository:
             role: MessageRole,
             content: str,
     ):
+        sequence_number = await self.get_next_sequence_number(session_id)
         chat_message = ChatMessage(
             session_id=session_id,
             role=role,
             content=content,
+            sequence_number=sequence_number,
         )
 
         self.session.add(chat_message)
@@ -29,7 +31,32 @@ class ChatMessageRepository:
 
         return chat_message
 
-    async def get_history(self, session_id: UUID, limit: int = 20) -> list[ChatMessage]:
+    async def get_history(
+            self,
+            session_id: UUID,
+            limit: int = 20,
+    ) -> list[ChatMessage]:
+        subquery = (
+            select(ChatMessage)
+            .where(ChatMessage.session_id == session_id)
+            .order_by(ChatMessage.created_at.desc())
+            .limit(limit)
+            .subquery()
+        )
+
+        stmt = (
+            select(ChatMessage)
+            .join(
+                subquery,
+                ChatMessage.id == subquery.c.id,
+            )
+            .order_by(ChatMessage.created_at.asc())
+        )
+
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def get_history_old(self, session_id: UUID, limit: int = 20) -> list[ChatMessage]:
         statement = (select(ChatMessage)
                      .where(ChatMessage.session_id == session_id)
                      .order_by(ChatMessage.created_at.desc())
@@ -48,7 +75,7 @@ class ChatMessageRepository:
     async def get_messages(self, session_id: UUID, limit: int = 20) -> list[ChatMessage]:
         statement = (select(ChatMessage)
                      .where(ChatMessage.session_id == session_id)
-                     .order_by(ChatMessage.created_at.asc())
+                     .order_by(ChatMessage.sequence_number.desc())
                      .limit(limit)
                      )
 
@@ -56,4 +83,18 @@ class ChatMessageRepository:
 
         messages = list(results.scalars().all())
 
-        return messages
+        return list(reversed(messages))
+
+    async def get_next_sequence_number(
+            self,
+            session_id: UUID,
+    ) -> int:
+        statement = select(
+            func.coalesce(
+                func.max(ChatMessage.sequence_number),
+                0,
+            ) + 1
+        ).where(ChatMessage.session_id == session_id)
+
+        result = await self.session.execute(statement)
+        return result.scalar_one()

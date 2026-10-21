@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from uuid import uuid4
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, Text, DateTime, func, Enum as SQLEnum
+from sqlalchemy import ForeignKey, Text, DateTime, func, Enum as SQLEnum, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql.base import UUID
 from enum import StrEnum
@@ -53,4 +53,9 @@ class ChatMessage(Base):
 
     session: Mapped["ChatSession"] = relationship(
         back_populates="messages",
+    )
+
+    sequence_number: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
     )
