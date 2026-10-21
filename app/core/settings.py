@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     openai_chat_model: str = "gpt-4o-mini"
     google_embedding_model: str = "gemini-embedding-001"
     google_api_key: str
-    google_chat_model: str = "gemini-3.6-flash"
+    google_chat_model: str = "google_genai:gemini-3.6-flash"
     user_agent: str = "KnowledgeForge/1.0"
     tavily_api_key: str
     cohere_api_key: str

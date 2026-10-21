@@ -10,9 +10,9 @@
 6. Reranking ✅
 7. Query Rewriting
 8. Contextual Compression
-9. Conversation Memory           <-
+9. Conversation Memory ✅
 10. Agentic RAG
-11. Background Embedding Jobs
+11. Background Embedding Jobs ✅
 12. RAG Evaluation
 13. Observability ✅
 14. LangChain/LangGraph abstractions

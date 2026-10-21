@@ -4,12 +4,14 @@ from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
+from evaluation.rag_quality_evaluator import RagQualityEvaluator
 from evaluation.schemas import EvaluationSample
 from evaluation.metrics import expected_chunk_ids
 import time
 from cohere.errors import TooManyRequestsError
 
 from app.observability.langfuse import langfuse
+from app.services.answer_generator import AnswerGenerator
 
 
 @dataclass
@@ -28,6 +30,7 @@ class SampleRetrievalResult:
     answerable: bool
     rrf: RankingMetrics | None
     reranked: RankingMetrics | None
+    rag_score: dict[str, float]
 
 
 @dataclass
@@ -37,6 +40,7 @@ class RetrievalReport:
     skipped_unanswerable_samples: int
     rrf_metrics: dict[str, float]
     reranked_metrics: dict[str, float]
+    rag_metrics: dict[str, float]
     results: list[SampleRetrievalResult]
 
 
@@ -125,6 +129,8 @@ class RetrievalEvaluator:
             hybrid_search: HybridSearch,
             rerank: Rerank,
             user_id: UUID,
+            answer_generator: AnswerGenerator,
+            rag_quality_evaluator: RagQualityEvaluator,
             candidate_k: int = 20,
             final_k: int = 5,
             min_request_interval: float = 7.2,
@@ -136,6 +142,8 @@ class RetrievalEvaluator:
         self.hybrid_search = hybrid_search
         self.rerank = rerank
         self.user_id = user_id
+        self.answer_generator = answer_generator
+        self.rag_quality_evaluator = rag_quality_evaluator
         self.candidate_k = candidate_k
         self.final_k = final_k
 
@@ -166,6 +174,7 @@ class RetrievalEvaluator:
                     "difficulty": sample["difficulty"],
                 },
         ) as span:
+            # Retrieve candidates using hybrid search
             candidates = await self.hybrid_search(
                 query=sample["question"],
                 user_id=self.user_id,
@@ -174,8 +183,40 @@ class RetrievalEvaluator:
 
             rrf_ids = self._chunk_ids(candidates)
 
+            # Rerank candidates
+            reranked_results = await self._rerank_with_rate_limit(
+                query=sample["question"],
+                results=candidates,
+                top_k=self.candidate_k,
+                request_id=f"eval-{sample['id']}",
+            )
+
+            # Use the top 5 chunks as context
+            contexts = [
+                result.content
+                for result in reranked_results[:5]
+                if result.content and result.content.strip()
+            ]
+
+            # Generate an answer for both answerable and unanswerable questions
+            answer = await self.answer_generator.generate_answer(
+                question=sample["question"],
+                contexts=contexts,
+            )
+
             # Unanswerable questions are handled separately.
             if not sample["answerable"]:
+                rag_score = await self.rag_quality_evaluator.evaluate_unanswerable(
+                    question=sample["question"],
+                    answer=answer,
+                    contexts=contexts,
+                )
+                span.score(
+                    name="abstention_correctness",
+                    value=rag_score["abstention_correctness"],
+                    data_type="NUMERIC",
+                )
+
                 span.update(
                     output={
                         "answerable": False,
@@ -190,16 +231,26 @@ class RetrievalEvaluator:
                     answerable=False,
                     rrf=None,
                     reranked=None,
+                    rag_score=rag_score
                 )
 
-            reranked = await self._rerank_with_rate_limit(
-                query=sample["question"],
-                results=candidates,
-                top_k=self.candidate_k,
-                request_id=f"eval-{sample['id']}",
+            rag_score = await self.rag_quality_evaluator.evaluate(
+                question=sample["question"],
+                answer=answer,
+                contexts=contexts,
             )
 
-            reranked_ids = self._chunk_ids(reranked)
+            span.score(
+                name="faithfulness",
+                value=rag_score["faithfulness"],
+                data_type="NUMERIC",
+            )
+            span.score(
+                name="answer_relevancy",
+                value=rag_score["answer_relevancy"],
+                data_type="NUMERIC",
+            )
+
             relevant_ids = expected_chunk_ids(sample)
 
             rrf_metrics = calculate_metrics(
@@ -207,6 +258,9 @@ class RetrievalEvaluator:
                 rrf_ids,
                 self.final_k,
             )
+
+            reranked_ids = self._chunk_ids(reranked_results)
+
             reranked_metrics = calculate_metrics(
                 relevant_ids,
                 reranked_ids,
@@ -236,6 +290,7 @@ class RetrievalEvaluator:
                 answerable=True,
                 rrf=rrf_metrics,
                 reranked=reranked_metrics,
+                rag_score=rag_score
             )
 
     async def evaluate(
@@ -265,8 +320,13 @@ class RetrievalEvaluator:
             rrf_metrics = self._aggregate_metrics(
                 [result.rrf for result in evaluated]
             )
+
             reranked_metrics = self._aggregate_metrics(
                 [result.reranked for result in evaluated]
+            )
+
+            rag_metrics = self._aggregate_rag_metrics(
+                [result.rag_score for result in evaluated]
             )
 
             report = RetrievalReport(
@@ -277,6 +337,7 @@ class RetrievalEvaluator:
                 ),
                 rrf_metrics=rrf_metrics,
                 reranked_metrics=reranked_metrics,
+                rag_metrics=rag_metrics,
                 results=results,
             )
 
@@ -284,8 +345,11 @@ class RetrievalEvaluator:
             for stage, metrics in [
                 ("rrf", report.rrf_metrics),
                 ("reranked", report.reranked_metrics),
+                ("ragas", report.rag_metrics),
             ]:
                 for metric_name, value in metrics.items():
+                    if value is None:
+                        continue
                     run_span.score_trace(
                         name=f"{stage}_{metric_name}",
                         value=float(value),
@@ -301,6 +365,7 @@ class RetrievalEvaluator:
                     ),
                     "rrf_metrics": report.rrf_metrics,
                     "reranked_metrics": report.reranked_metrics,
+                    "rag_metrics": report.rag_metrics,
                 }
             )
 
@@ -375,6 +440,34 @@ class RetrievalEvaluator:
                 metric.hit_at_5 for metric in valid_metrics
             ) / count,
         }
+
+    @staticmethod
+    def _aggregate_rag_metrics(
+            scores: list[dict[str, float] | None],
+    ) -> dict[str, float | None]:
+        metric_names = (
+            "faithfulness",
+            "answer_relevancy",
+            "abstention_correctness",
+        )
+
+        result: dict[str, float | None] = {}
+
+        for metric in metric_names:
+            values = [
+                value
+                for score in scores
+                if score is not None
+                if (value := score.get(metric)) is not None
+            ]
+
+            result[metric] = (
+                sum(values) / len(values)
+                if values
+                else None
+            )
+
+        return result
 
     async def _rerank_with_rate_limit(
             self,

@@ -1,18 +1,43 @@
 import asyncio
+
+from langchain_openai import ChatOpenAI
+
+
+def debug_asyncio_run(stage: str) -> None:
+    print(
+        f"[{stage}] asyncio.run = "
+        f"{asyncio.run.__module__}.{asyncio.run.__name__}"
+    )
+
+
 import json
 from dataclasses import asdict
 from datetime import datetime
 from pathlib import Path
 from uuid import UUID
 
-from app.core.db.database import get_db, AsyncSessionLocal
+from app.core.db.database import AsyncSessionLocal
 from app.core.settings import settings
 from app.dependencies import get_openai_embedding_provider
+
 from evaluation.dataset import DATASET
+
+debug_asyncio_run("after dataset import")
+from evaluation.rag_quality_evaluator import RagQualityEvaluator
+
+debug_asyncio_run("after rag quality evaluator import")
+
 from evaluation.retrieval_evaluator import RetrievalEvaluator
+
+debug_asyncio_run("after retrieval evaluator import")
 from app.repositories.document_chunk_repository import DocumentChunkRepository
+
+debug_asyncio_run("after DocumentChunkRepository import")
 from app.services.reranker.cohere_reranker import CohereReranker
 from app.services.search_service import SearchService
+from app.services.answer_generator import AnswerGenerator
+
+debug_asyncio_run("after evaluation imports")
 
 
 async def run(
@@ -20,10 +45,20 @@ async def run(
         reranker_service,
         user_id: UUID,
 ) -> None:
+    llm = ChatOpenAI(
+        model=settings.openai_chat_model,
+    )
+
+    answer_generator = AnswerGenerator(llm=llm)
+
+    rag_quality_evaluator = RagQualityEvaluator()
+
     evaluator = RetrievalEvaluator(
         hybrid_search=search_service.do_hybrid_search,
         rerank=reranker_service.rerank,
         user_id=user_id,
+        rag_quality_evaluator=rag_quality_evaluator,
+        answer_generator=answer_generator,
         candidate_k=20,
         final_k=5,
     )
@@ -51,6 +86,9 @@ async def run(
         ),
         "rrf": report.rrf_metrics,
         "reranked": report.reranked_metrics,
+        "faithfulness": report.rag_metrics["faithfulness"],
+        "answer_relevancy": report.rag_metrics["answer_relevancy"],
+        "abstention_correctness": report.rag_metrics["abstention_correctness"],
         "output": str(output_path),
     }, indent=2))
 

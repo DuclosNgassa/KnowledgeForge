@@ -36,7 +36,7 @@ def create_agent(
     web_search = create_web_search_tool()
 
     return create_deep_agent(
-        model="google_genai:" + settings.google_chat_model,
+        model=settings.google_chat_model,
         tools=[
             search_documents,
             get_document_metadata,
