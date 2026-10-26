@@ -40,6 +40,7 @@ class CitationRegistry:
 
             result.append(
                 SourceReference(
+                    citation_id=source.citation_id,
                     chunk_id=source.chunk_id,
                     document_id=source.document_id,
                     filename=source.filename,
@@ -62,6 +63,7 @@ class CitationRegistry:
 
             result.append(
                 WebSource(
+                    citation_id=source.citation_id,
                     url=source.url,
                     title=source.title,
                 )

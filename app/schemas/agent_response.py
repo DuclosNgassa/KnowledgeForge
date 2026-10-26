@@ -11,6 +11,7 @@ class AgentResponse(BaseModel):
 
 
 class SourceReference(BaseModel):
+    citation_id: str
     chunk_id: UUID | None = None
     document_id: UUID
     page_number: int | None = None
@@ -19,5 +20,6 @@ class SourceReference(BaseModel):
 
 
 class WebSource(BaseModel):
+    citation_id: str
     title: str
     url: str
