@@ -21,6 +21,7 @@ from app.schemas.search_result import WebSearchResult
 from app.services.web_search_collector import WebSearchCollector
 from app.services.conversation_context import ConversationContext
 from app.services.citation_service import CitationService
+from app.services.citation_grounding_service import CitationGroundingService
 
 MAX_HISTORY_MESSAGES = 20
 
@@ -65,6 +66,7 @@ class AgentService:
                  web_search_collector: WebSearchCollector,
                  conversation_context: ConversationContext,
                  citation_service: CitationService,
+                 citation_grounding_service: CitationGroundingService,
                  ):
         self.agent = agent
         self.chat_message_service = chat_message_service
@@ -73,6 +75,7 @@ class AgentService:
         self.web_search_collector = web_search_collector
         self.conversation_context = conversation_context
         self.citation_service = citation_service
+        self.citation_grounding_service = citation_grounding_service
 
     async def chat(
             self,
@@ -147,12 +150,15 @@ class AgentService:
                         "Answer contains invalid citation IDs: %s",
                         invalid_citations,
                     )
+                grounding_report, grounding_metrics = await self._build_grounding_metrics(final_answer, registry)
 
                 result = AgentResponse(
                     answer=final_answer,
                     sources=registry.document_sources(),
                     web_sources=registry.web_sources(),
+                    citation_validation=grounding_report,
                 )
+
 
                 observation.update(
                     output={
@@ -161,6 +167,7 @@ class AgentService:
                         "web_result_count": len(web_results),
                         "invalid_citations": invalid_citations,
                         "citation_integrity_valid": not invalid_citations,
+                        "grounding": grounding_metrics,
                     }
                 )
 
@@ -303,6 +310,9 @@ class AgentService:
                                 f"Answer contains invalid citation IDs: {invalid_citations}"
                             )
 
+                        grounding_report, grounding_metrics = await self._build_grounding_metrics(final_answer,
+                                                                                                  registry)
+
                         # TODO persist conversation in a transaction
                         await self.chat_message_service.add_message(
                             session_id=chat_session.id,
@@ -342,7 +352,8 @@ class AgentService:
                                 "citation_validation": {
                                     "valid": not invalid_citations,
                                     "invalid_citations": invalid_citations
-                                }
+                                },
+                                "grounding": grounding_metrics,
                             },
                         )
 
@@ -428,3 +439,23 @@ class AgentService:
             raise RuntimeError("Answer model returned an empty answer.")
 
         return answer
+
+    async def _build_grounding_metrics(self, final_answer, registry):
+
+        grounding_report = await self.citation_grounding_service.evaluate(
+            answer=final_answer,
+            registry=registry,
+        )
+
+        grounding_metrics = {
+            "total_claims": grounding_report.total_claims,
+            "supported_claims": grounding_report.supported_claims,
+            "unsupported_claims": grounding_report.unsupported_claims,
+            "uncited_claims": grounding_report.uncited_claims,
+            "grounded_claim_ratio": grounding_report.grounded_claim_ratio,
+            "citation_coverage": grounding_report.citation_coverage,
+            "citation_support_rate": grounding_report.citation_support_rate,
+            "invalid_citations": grounding_report.invalid_citations,
+        }
+
+        return grounding_report, grounding_metrics

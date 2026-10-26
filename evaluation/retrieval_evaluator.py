@@ -12,6 +12,9 @@ from cohere.errors import TooManyRequestsError
 
 from app.observability.langfuse import langfuse
 from app.services.answer_generator import AnswerGenerator
+from app.observability.logging import logger
+from app.schemas.retrieved_document import RetrievedDocument
+from app.services.citation_service import CitationService
 
 
 @dataclass
@@ -31,6 +34,7 @@ class SampleRetrievalResult:
     rrf: RankingMetrics | None
     reranked: RankingMetrics | None
     rag_score: dict[str, float]
+    grounding: dict | None = None
 
 
 @dataclass
@@ -42,6 +46,7 @@ class RetrievalReport:
     reranked_metrics: dict[str, float]
     rag_metrics: dict[str, float]
     results: list[SampleRetrievalResult]
+    grounding_metrics: dict[str, float | int | None]
 
 
 HybridSearch = Callable[..., Awaitable[list[Any]]]
@@ -130,6 +135,7 @@ class RetrievalEvaluator:
             rerank: Rerank,
             user_id: UUID,
             answer_generator: AnswerGenerator,
+            citation_service: CitationService,
             rag_quality_evaluator: RagQualityEvaluator,
             candidate_k: int = 20,
             final_k: int = 5,
@@ -143,6 +149,7 @@ class RetrievalEvaluator:
         self.rerank = rerank
         self.user_id = user_id
         self.answer_generator = answer_generator
+        self.citation_service = citation_service
         self.rag_quality_evaluator = rag_quality_evaluator
         self.candidate_k = candidate_k
         self.final_k = final_k
@@ -191,18 +198,51 @@ class RetrievalEvaluator:
                 request_id=f"eval-{sample['id']}",
             )
 
-            # Use the top 5 chunks as context
-            contexts = [
-                result.content
+            # Build the citation registry from the retrieved evidence used as context.
+            grounding_results = [
+                result
                 for result in reranked_results[:5]
                 if result.content and result.content.strip()
             ]
+
+            contexts = [result.content for result in grounding_results]
 
             # Generate an answer for both answerable and unanswerable questions
             answer = await self.answer_generator.generate_answer(
                 question=sample["question"],
                 contexts=contexts,
             )
+
+            logger.info("Generated evaluation answer: %s", answer)
+            logger.info(
+                "Extracted answer citations: %s",
+                self.citation_service.extract_citations(answer),
+            )
+
+            documents = [
+                RetrievedDocument(
+                    chunk_id=str(result.chunk_id),
+                    document_id=str(result.document_id),
+                    content=result.content,
+                    filename=result.file_name,
+                    page_number=result.page_number,
+                )
+                for result in grounding_results
+            ]
+
+            registry = self.citation_service.build_registry(
+                documents=documents,
+                web_results=[],
+            )
+
+            grounding_report = (
+                await self.rag_quality_evaluator.evaluate_citation_grounding(
+                    answer=answer,
+                    registry=registry,
+                )
+            )
+
+            grounding = grounding_report.model_dump(mode="json")
 
             # Unanswerable questions are handled separately.
             if not sample["answerable"]:
@@ -231,7 +271,8 @@ class RetrievalEvaluator:
                     answerable=False,
                     rrf=None,
                     reranked=None,
-                    rag_score=rag_score
+                    rag_score=rag_score,
+                    grounding=grounding,
                 )
 
             rag_score = await self.rag_quality_evaluator.evaluate(
@@ -250,6 +291,11 @@ class RetrievalEvaluator:
                 value=rag_score["answer_relevancy"],
                 data_type="NUMERIC",
             )
+            span.score(
+                name="grounded_claim_ratio",
+                value=grounding_report.grounded_claim_ratio or 0.0,
+                data_type="NUMERIC",
+            ) if grounding_report.grounded_claim_ratio is not None else None
 
             relevant_ids = expected_chunk_ids(sample)
 
@@ -280,6 +326,7 @@ class RetrievalEvaluator:
                     "relevant_chunk_ids": list(relevant_ids),
                     "rrf_chunk_ids": rrf_ids,
                     "reranked_chunk_ids": reranked_ids,
+                    "citation_grounding": grounding_report.model_dump(mode="json")
                 }
             )
 
@@ -290,7 +337,8 @@ class RetrievalEvaluator:
                 answerable=True,
                 rrf=rrf_metrics,
                 reranked=reranked_metrics,
-                rag_score=rag_score
+                rag_score=rag_score,
+                grounding=grounding
             )
 
     async def evaluate(
@@ -329,6 +377,25 @@ class RetrievalEvaluator:
                 [result.rag_score for result in evaluated]
             )
 
+            grounding_metrics = self._aggregate_grounding_metrics(
+                [result.grounding for result in evaluated]
+            )
+
+            # Record aggregate grounding metrics in Langfuse.
+            for metric_name in (
+                    "grounded_claim_ratio",
+                    "citation_coverage",
+                    "citation_support_rate",
+            ):
+                value = grounding_metrics[metric_name]
+
+                if value is not None:
+                    run_span.score(
+                        name=f"grounding_{metric_name}",
+                        value=value,
+                        data_type="NUMERIC",
+                    )
+
             report = RetrievalReport(
                 total_samples=len(samples),
                 evaluated_samples=len(evaluated),
@@ -339,6 +406,7 @@ class RetrievalEvaluator:
                 reranked_metrics=reranked_metrics,
                 rag_metrics=rag_metrics,
                 results=results,
+                grounding_metrics=grounding_metrics,
             )
 
             # Attach aggregate metrics to the overall Langfuse trace.
@@ -515,3 +583,55 @@ class RetrievalEvaluator:
                     )
 
                     await asyncio.sleep(retry_delay)
+
+    def _aggregate_grounding_metrics(
+            self,
+            grounding_reports: list[dict | None],
+    ) -> dict[str, float | int | None]:
+        total_claims = 0
+        supported_claims = 0
+        cited_claims = 0
+        supported_cited_claims = 0
+
+        for report in grounding_reports:
+            if report is None:
+                continue
+
+            claims = report.get("claims", [])
+
+            for claim in claims:
+                total_claims += 1
+
+                is_supported = claim["supported"]
+                has_citation = bool(claim.get("citation_ids", []))
+
+                if is_supported:
+                    supported_claims += 1
+
+                if has_citation:
+                    cited_claims += 1
+
+                    if is_supported:
+                        supported_cited_claims += 1
+
+        return {
+            "total_claims": total_claims,
+            "supported_claims": supported_claims,
+            "cited_claims": cited_claims,
+            "supported_cited_claims": supported_cited_claims,
+            "grounded_claim_ratio": (
+                supported_claims / total_claims
+                if total_claims > 0
+                else None
+            ),
+            "citation_coverage": (
+                cited_claims / total_claims
+                if total_claims > 0
+                else None
+            ),
+            "citation_support_rate": (
+                supported_cited_claims / cited_claims
+                if cited_claims > 0
+                else None
+            ),
+        }

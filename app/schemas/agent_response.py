@@ -2,12 +2,15 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from app.schemas.citation_validation import CitationGroundingReport
+
 
 # API/LLM layer's data structure.
 class AgentResponse(BaseModel):
     answer: str
     sources: list[SourceReference]  # = Field(default_factory=list)
     web_sources: list[WebSource]
+    citation_validation: CitationGroundingReport | None = None
 
 
 class SourceReference(BaseModel):

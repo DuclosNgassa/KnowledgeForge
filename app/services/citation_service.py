@@ -75,7 +75,7 @@ class CitationRegistry:
 class CitationService:
     """Build and validate citation references for generated answers."""
 
-    CITATION_PATTERN = re.compile(r"\[(D\d+|W\d+)\]")
+    CITATION_PATTERN = re.compile(r"\[((?:D|W)\d+(?:\s*,\s*(?:D|W)\d+)*)\]")
 
     def build_registry(self,
                        documents: list[RetrievedDocument],
@@ -109,7 +109,15 @@ class CitationService:
 
     def extract_citations(self, answer: str) -> list[str]:
         """Return unique citation labels in order of appearance."""
-        return list(dict.fromkeys(self.CITATION_PATTERN.findall(answer)))
+        citations: list[str] = []
+
+        for match in self.CITATION_PATTERN.finditer(answer):
+            citations.extend(
+                citation.strip()
+                for citation in match.group(1).split(",")
+            )
+
+        return citations
 
     def validate_citations(self, answer: str, registry: CitationRegistry) -> list[str]:
         """Return citation labels that do not exist in the registry."""

@@ -39,6 +39,7 @@ from app.services.web_search_collector import WebSearchCollector
 from app.services.conversation_context import ConversationContext
 from app.services.query_contextualizer import QueryContextualizer
 from app.services.citation_service import CitationService
+from app.services.citation_grounding_service import CitationGroundingService
 
 
 def get_user_service(
@@ -154,6 +155,7 @@ def get_agent_service(
     collector = RetrievalCollector()
     web_collector = WebSearchCollector()
     citation_service = CitationService()
+    citation_grounding_service = CitationGroundingService(citation_service)
 
     agent = create_agent(
         search_service=search_service,
@@ -175,6 +177,7 @@ def get_agent_service(
         web_search_collector=web_collector,
         conversation_context=conversation_context,
         citation_service=citation_service,
+        citation_grounding_service=citation_grounding_service,
     )
 
 

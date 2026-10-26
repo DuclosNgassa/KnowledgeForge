@@ -2,6 +2,10 @@ import nest_asyncio
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
+from app.services.citation_grounding_service import CitationGroundingService
+from app.services.citation_service import CitationRegistry
+from app.schemas.citation_validation import CitationGroundingReport
+
 _original_apply = nest_asyncio.apply
 
 try:
@@ -22,7 +26,9 @@ from app.core.settings import settings
 
 
 class RagQualityEvaluator:
-    def __init__(self):
+    def __init__(self, citation_grounding_service: CitationGroundingService):
+        self.citation_grounding_service = citation_grounding_service
+
         evaluator_llm = llm_factory(
             model=settings.openai_chat_model,
         )
@@ -103,6 +109,13 @@ class RagQualityEvaluator:
         return {
             "abstention_correctness": float(result.score),
         }
+
+    async def evaluate_citation_grounding(self, answer: str, registry: CitationRegistry) -> CitationGroundingReport:
+        report = await self.citation_grounding_service.evaluate(
+            answer=answer,
+            registry=registry,
+        )
+        return report
 
 
 class AbstentionEvaluation(BaseModel):

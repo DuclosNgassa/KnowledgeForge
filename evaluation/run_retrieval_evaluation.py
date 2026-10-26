@@ -2,6 +2,8 @@ import asyncio
 
 from langchain_openai import ChatOpenAI
 
+from app.services.citation_grounding_service import CitationGroundingService
+from app.services.citation_service import CitationService
 
 def debug_asyncio_run(stage: str) -> None:
     print(
@@ -50,8 +52,10 @@ async def run(
     )
 
     answer_generator = AnswerGenerator(llm=llm)
+    citation_service = CitationService()
+    citation_grounding_service = CitationGroundingService(citation_service)
+    rag_quality_evaluator = RagQualityEvaluator(citation_grounding_service)
 
-    rag_quality_evaluator = RagQualityEvaluator()
 
     evaluator = RetrievalEvaluator(
         hybrid_search=search_service.do_hybrid_search,
@@ -59,6 +63,7 @@ async def run(
         user_id=user_id,
         rag_quality_evaluator=rag_quality_evaluator,
         answer_generator=answer_generator,
+        citation_service=citation_service,
         candidate_k=20,
         final_k=5,
     )
@@ -89,6 +94,7 @@ async def run(
         "faithfulness": report.rag_metrics["faithfulness"],
         "answer_relevancy": report.rag_metrics["answer_relevancy"],
         "abstention_correctness": report.rag_metrics["abstention_correctness"],
+        "grounding": report.grounding_metrics,
         "output": str(output_path),
     }, indent=2))
 
