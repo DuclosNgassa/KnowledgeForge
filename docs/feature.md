@@ -13,7 +13,7 @@
 9. Conversation Memory ✅
 10. Agentic RAG
 11. Background Embedding Jobs ✅
-12. RAG Evaluation
+12. RAG Evaluation ✅
 13. Observability ✅
 14. LangChain/LangGraph abstractions
 15. Production optimization

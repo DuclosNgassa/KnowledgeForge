@@ -36,6 +36,9 @@ from langchain.chat_models import init_chat_model
 
 from app.services.retrieval_collector import RetrievalCollector
 from app.services.web_search_collector import WebSearchCollector
+from app.services.conversation_context import ConversationContext
+from app.services.query_contextualizer import QueryContextualizer
+from app.services.citation_service import CitationService
 
 
 def get_user_service(
@@ -130,6 +133,8 @@ def get_agent_service(
         settings.google_chat_model,
         streaming=True,
     )
+    conversation_context = ConversationContext()
+    query_contextualizer = QueryContextualizer(model=streaming_model)
 
     #    embedding_provider = get_google_embedding_provider()
     embedding_provider = get_openai_embedding_provider()
@@ -148,6 +153,7 @@ def get_agent_service(
 
     collector = RetrievalCollector()
     web_collector = WebSearchCollector()
+    citation_service = CitationService()
 
     agent = create_agent(
         search_service=search_service,
@@ -157,6 +163,8 @@ def get_agent_service(
         request_id=request_id,
         collector=collector,
         web_collector=web_collector,
+        conversation_context=conversation_context,
+        query_contextualizer=query_contextualizer,
     )
 
     return AgentService(
@@ -165,6 +173,8 @@ def get_agent_service(
         streaming_model=streaming_model,
         retrieval_collector=collector,
         web_search_collector=web_collector,
+        conversation_context=conversation_context,
+        citation_service=citation_service,
     )
 
 

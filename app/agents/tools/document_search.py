@@ -6,12 +6,16 @@ from app.schemas.retrieved_document import RetrievedDocument
 from app.services.reranker.base import Reranker
 from app.services.search_service import SearchService
 from app.services.retrieval_collector import RetrievalCollector
+from app.services.conversation_context import ConversationContext
+from app.services.query_contextualizer import QueryContextualizer
 
 
 def create_search_documents_tool(
         search_service: SearchService,
         reranker: Reranker,
         user_id: UUID,
+        query_contextualizer: QueryContextualizer,
+        conversation_context: ConversationContext,
         request_id: str | None = None,
         collector: RetrievalCollector | None = None,
 ):
@@ -23,8 +27,14 @@ def create_search_documents_tool(
          Use this tool whenever information from user´s uploaded
          documents is needed
          """
+
+        search_query = await query_contextualizer.contextualize(
+            question=query,
+            history=conversation_context.history,
+        )
+
         results = await search_service.do_hybrid_search(
-            query=query,
+            query=search_query,
             user_id=user_id,
             limit=5,
             request_id=request_id,
@@ -37,13 +47,12 @@ def create_search_documents_tool(
 
         # TODO use OPENAI as Reranker?
         reranked_results = await reranker.rerank(
-            query=query,
+            query=search_query,
             results=results,
             top_k=5,
             request_id=request_id
         )
-        #print("Search result after reranking: ", reranked_results)
-
+        # print("Search result after reranking: ", reranked_results)
 
         retrieved_documents = [
             RetrievedDocument(

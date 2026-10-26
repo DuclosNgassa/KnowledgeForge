@@ -9,6 +9,8 @@ from app.core.settings import settings
 from app.schemas.agent_response import AgentResponse
 from app.services.retrieval_collector import RetrievalCollector
 from app.services.web_search_collector import WebSearchCollector
+from app.services.conversation_context import ConversationContext
+from app.services.query_contextualizer import QueryContextualizer
 
 
 def create_agent(
@@ -19,13 +21,20 @@ def create_agent(
         request_id,
         collector: RetrievalCollector | None = None,
         web_collector: WebSearchCollector | None = None,
+        query_contextualizer: QueryContextualizer | None = None,
+        conversation_context: ConversationContext | None = None,
 ):
+    if query_contextualizer is None or conversation_context is None:
+        raise ValueError("Query contextualizer and conversation context are required")
+
     search_documents = create_search_documents_tool(
         search_service=search_service,
         reranker=reranker,
         user_id=user_id,
         request_id=request_id,
         collector=collector,
+        query_contextualizer=query_contextualizer,
+        conversation_context=conversation_context,
     )
 
     get_document_metadata = create_get_document_metadata_tool(
