@@ -89,12 +89,9 @@ async def run(
         "skipped_unanswerable": (
             report.skipped_unanswerable_samples
         ),
-        "rrf": report.rrf_metrics,
-        "reranked": report.reranked_metrics,
-        "faithfulness": report.rag_metrics["faithfulness"],
-        "answer_relevancy": report.rag_metrics["answer_relevancy"],
-        "abstention_correctness": report.rag_metrics["abstention_correctness"],
-        "grounding": report.grounding_metrics,
+        "retrieval_quality": report.retrieval_metrics,
+        "answer_quality": report.answer_quality_metrics,
+        "citation_quality": report.citation_quality_metrics,
         "output": str(output_path),
     }, indent=2))
 

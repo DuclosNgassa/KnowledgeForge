@@ -42,11 +42,12 @@ class RetrievalReport:
     total_samples: int
     evaluated_samples: int
     skipped_unanswerable_samples: int
-    rrf_metrics: dict[str, float]
-    reranked_metrics: dict[str, float]
-    rag_metrics: dict[str, float]
+
+    retrieval_metrics: dict
+    answer_quality_metrics: dict
+    citation_quality_metrics: dict
+
     results: list[SampleRetrievalResult]
-    grounding_metrics: dict[str, float | int | None]
 
 
 HybridSearch = Callable[..., Awaitable[list[Any]]]
@@ -359,81 +360,95 @@ class RetrievalEvaluator:
                 for sample in samples
             ]
 
-            # Reuse your existing aggregation logic here.
-            evaluated = [
+            # Retrieval metrics require answerable samples
+            # with known relevant chunks.
+            retrieval_samples = [
                 result for result in results
                 if result.answerable
             ]
 
             rrf_metrics = self._aggregate_metrics(
-                [result.rrf for result in evaluated]
+                [result.rrf for result in retrieval_samples]
             )
 
             reranked_metrics = self._aggregate_metrics(
-                [result.reranked for result in evaluated]
+                [result.reranked for result in retrieval_samples]
             )
 
-            rag_metrics = self._aggregate_rag_metrics(
-                [result.rag_score for result in evaluated]
+            retrieval_metrics = {
+                "rrf": rrf_metrics,
+                "reranked": reranked_metrics,
+            }
+
+            # Answer-quality metrics: evaluate answerable samples
+            # for which RAGAS scores are available.
+            answer_samples = [
+                result for result in results
+                if result.answerable
+                   and result.rag_score is not None
+            ]
+
+            answer_quality_metrics = self._aggregate_rag_metrics(
+                [result.rag_score for result in answer_samples]
             )
 
-            grounding_metrics = self._aggregate_grounding_metrics(
-                [result.grounding for result in evaluated]
+            # Citation quality can include any sample with a
+            # grounding report, including unanswerable questions.
+            citation_samples = [
+                result for result in results
+                if result.grounding is not None
+            ]
+
+            citation_quality_metrics = (
+                self._aggregate_grounding_metrics(
+                    [result.grounding for result in citation_samples]
+                )
             )
 
-            # Record aggregate grounding metrics in Langfuse.
-            for metric_name in (
-                    "grounded_claim_ratio",
-                    "citation_coverage",
-                    "citation_support_rate",
-            ):
-                value = grounding_metrics[metric_name]
+            # Record each group with a distinct prefix in Langfuse.
+            for method, metrics in retrieval_metrics.items():
+                self._record_metric_group(
+                    run_span,
+                    f"retrieval_{method}",
+                    metrics,
+                )
 
-                if value is not None:
-                    run_span.score(
-                        name=f"grounding_{metric_name}",
-                        value=value,
-                        data_type="NUMERIC",
-                    )
+            self._record_metric_group(
+                run_span,
+                "answer",
+                answer_quality_metrics,
+            )
+
+            self._record_metric_group(
+                run_span,
+                "citation",
+                citation_quality_metrics,
+            )
 
             report = RetrievalReport(
                 total_samples=len(samples),
-                evaluated_samples=len(evaluated),
+                evaluated_samples=len(results),
                 skipped_unanswerable_samples=(
-                        len(results) - len(evaluated)
+                        len(results) - len(retrieval_samples)
                 ),
-                rrf_metrics=rrf_metrics,
-                reranked_metrics=reranked_metrics,
-                rag_metrics=rag_metrics,
+                retrieval_metrics=retrieval_metrics,
+                answer_quality_metrics=answer_quality_metrics,
+                citation_quality_metrics=citation_quality_metrics,
                 results=results,
-                grounding_metrics=grounding_metrics,
             )
-
-            # Attach aggregate metrics to the overall Langfuse trace.
-            for stage, metrics in [
-                ("rrf", report.rrf_metrics),
-                ("reranked", report.reranked_metrics),
-                ("ragas", report.rag_metrics),
-            ]:
-                for metric_name, value in metrics.items():
-                    if value is None:
-                        continue
-                    run_span.score_trace(
-                        name=f"{stage}_{metric_name}",
-                        value=float(value),
-                        data_type="NUMERIC",
-                    )
 
             run_span.update(
                 output={
-                    "total_samples": report.total_samples,
-                    "evaluated_samples": report.evaluated_samples,
-                    "skipped_unanswerable_samples": (
-                        report.skipped_unanswerable_samples
+                    "total_samples": len(samples),
+                    "evaluated_samples": len(results),
+                    "answerable_samples_used_for_retrieval": (
+                        len(retrieval_samples)
                     ),
-                    "rrf_metrics": report.rrf_metrics,
-                    "reranked_metrics": report.reranked_metrics,
-                    "rag_metrics": report.rag_metrics,
+                    "samples_used_for_answer_quality": len(answer_samples),
+                    "samples_used_for_citation_quality": len(citation_samples),
+                    "retrieval_metrics": retrieval_metrics,
+                    "answer_quality_metrics": answer_quality_metrics,
+                    "citation_quality_metrics": citation_quality_metrics,
                 }
             )
 
@@ -474,6 +489,25 @@ class RetrievalEvaluator:
                     value=float(value),
                     data_type="NUMERIC",
                 )
+
+    @staticmethod
+    def _record_metric_group(
+            observation,
+            prefix: str,
+            metrics: dict,
+    ) -> None:
+        for metric_name, value in metrics.items():
+            if value is None or isinstance(value, bool):
+                continue
+
+            if not isinstance(value, (int, float)):
+                continue
+
+            observation.score(
+                name=f"{prefix}_{metric_name}",
+                value=value,
+                data_type="NUMERIC",
+            )
 
     @staticmethod
     def _aggregate_metrics(
