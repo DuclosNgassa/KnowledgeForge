@@ -36,5 +36,8 @@ class KnowledgeBaseResponse(BaseModel):
     }
 
 
+class KnowledgeBaseDeleteResponse(BaseModel):
+    message: str
+
 class KnowledgeBaseListResponse(BaseModel):
     knowledge_bases: list[KnowledgeBaseResponse]

@@ -4,7 +4,6 @@ from typing import Annotated
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.agents.agent import create_agent
 from app.core.settings import settings
 from app.ingestion.chunker.document_chunker import DocumentChunkService
 from app.auth.dependencies import AccessTokenBearer
@@ -153,24 +152,18 @@ def get_agent_service(
     citation_service = CitationService()
     citation_grounding_service = CitationGroundingService(citation_service)
 
-    agent = create_agent(
+
+    return AgentService(
         search_service=search_service,
         document_service=document_service,
         user_id=current_user_info["user_id"],
         request_id=request_id,
-        collector=collector,
-        web_collector=web_collector,
-        conversation_context=conversation_context,
-        query_contextualizer=query_contextualizer,
-    )
-
-    return AgentService(
-        agent=agent,
-        chat_message_service=chat_message_service,
-        streaming_model=streaming_model,
         retrieval_collector=collector,
         web_search_collector=web_collector,
         conversation_context=conversation_context,
+        query_contextualizer=query_contextualizer,
+        chat_message_service=chat_message_service,
+        streaming_model=streaming_model,
         citation_service=citation_service,
         citation_grounding_service=citation_grounding_service,
     )
@@ -179,8 +172,9 @@ def get_agent_service(
 def get_chat_session_service(
         db: AsyncSession = Depends(get_db),
 ) -> ChatSessionService:
-    repository = ChatSessionRepository(db)
-    return ChatSessionService(repository)
+    chat_session_repository = ChatSessionRepository(db)
+    knowledge_base_repository = KnowledgeBaseRepository(db)
+    return ChatSessionService(chat_session_repository, knowledge_base_repository)
 
 
 def get_chat_message_service(

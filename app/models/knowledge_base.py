@@ -3,16 +3,23 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, String, ForeignKey, UniqueConstraint
 from sqlalchemy.dialects.postgresql.base import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.sql.schema import ForeignKey
 
 from app.core.db.database import Base
 
 
 class KnowledgeBase(Base):
     __tablename__ = "knowledge_bases"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id",
+            "name",
+            name="uq_knowledge_bases_user_id_name",
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -40,8 +47,9 @@ class KnowledgeBase(Base):
 
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        nullable=True,
         default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+        nullable=False,
     )
 
     user: Mapped["User"] = relationship(

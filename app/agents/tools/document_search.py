@@ -16,6 +16,7 @@ def create_search_documents_tool(
         conversation_context: ConversationContext,
         request_id: str | None = None,
         collector: RetrievalCollector | None = None,
+        knowledge_base_ids: list[UUID] | None = None,
 ):
     @tool
     async def search_documents(query: str) -> list[RetrievedDocument]:
@@ -36,6 +37,7 @@ def create_search_documents_tool(
             user_id=user_id,
             limit=5,
             request_id=request_id,
+            knowledge_base_ids=knowledge_base_ids,
         )
 
         if not results:

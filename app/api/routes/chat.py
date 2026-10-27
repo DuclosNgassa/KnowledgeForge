@@ -12,6 +12,8 @@ from app.services.chat_message_service import ChatMessageService
 from app.services.chat_session_service import ChatSessionService
 from fastapi.responses import StreamingResponse
 
+from app.schemas.chat_session_create import ChatSessionCreate
+
 router = APIRouter(
     prefix="/chat",
     tags=["Chat"],
@@ -56,8 +58,8 @@ async def stream_message(
         user_id=current_user_info["user_id"],
     )
 
-    if chat_session is None:
-        raise HTTPException(status_code=404, detail="Session not found")
+    if not chat_session:
+        raise HTTPException(status_code=404, detail="Chat session not found")
 
     async def event_generator():
         async for event in agent_service.stream_chat(
@@ -101,11 +103,15 @@ async def get_chat_messages(
 
 @router.post("/sessions", response_model=ChatSessionResponse)
 async def create_chat_session(
-        chat_session_service: ChatSessionService = Depends(get_chat_session_service),
+        request: ChatSessionCreate,
+        chat_session_service: ChatSessionService = Depends(
+            get_chat_session_service
+        ),
         current_user_info: dict = Depends(get_current_user_info),
 ):
     session = await chat_session_service.create(
-        user_id=current_user_info["user_id"]
+        user_id=current_user_info["user_id"],
+        knowledge_base_ids=request.knowledge_base_ids,
     )
 
     return ChatSessionResponse(session_id=session.id)

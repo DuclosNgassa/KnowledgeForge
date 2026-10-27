@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from deepagents import create_deep_agent
 from langchain.agents.structured_output import ToolStrategy
 
@@ -18,6 +20,7 @@ def create_agent(
         document_service,
         user_id,
         request_id,
+        knowledge_base_ids: list[UUID] | None = None,
         collector: RetrievalCollector | None = None,
         web_collector: WebSearchCollector | None = None,
         query_contextualizer: QueryContextualizer | None = None,
@@ -30,6 +33,7 @@ def create_agent(
         search_service=search_service,
         user_id=user_id,
         request_id=request_id,
+        knowledge_base_ids=knowledge_base_ids,
         collector=collector,
         query_contextualizer=query_contextualizer,
         conversation_context=conversation_context,
@@ -38,11 +42,13 @@ def create_agent(
     get_document_metadata = create_get_document_metadata_tool(
         document_service=document_service,
         user_id=user_id,
+        knowledge_base_ids=knowledge_base_ids,
     )
 
     get_document_content = create_get_document_content_tool(
         document_service=document_service,
         user_id=user_id,
+        knowledge_base_ids=knowledge_base_ids,
     )
 
     web_search = create_web_search_tool(

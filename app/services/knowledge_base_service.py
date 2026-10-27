@@ -1,7 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import HTTPException, status
+from sqlalchemy.exc import IntegrityError
 
 from app.models.knowledge_base import KnowledgeBase
 from app.repositories.knowledge_base_repository import KnowledgeBaseRepository
@@ -35,7 +36,15 @@ class KnowledgeBaseService:
             user_id=user_id,
         )
 
-        return await self.repository.create(knowledge_base)
+        try:
+            return await self.repository.create(knowledge_base)
+        except IntegrityError as exc:
+            # The repository's failed transaction must be rolled back
+            await self.repository.db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="KnowledgeBase with this name already exists",
+            ) from exc
 
     async def find_by_id_and_user_id(self, knowledge_base_id: UUID, user_id: UUID) -> KnowledgeBaseResponse | None:
         knowledge_base = await self.repository.find_by_id_and_user_id(knowledge_base_id, user_id)
@@ -44,34 +53,25 @@ class KnowledgeBaseService:
             return KnowledgeBaseResponse.model_validate(knowledge_base)
         return None
 
-
     async def update_knowledge_base(self,
                                     knowledge_base_id: UUID,
                                     data: KnowledgeBaseUpdate,
                                     user_id: UUID) -> KnowledgeBase:
-        knowledge_base_to_update = await self.repository.find_by_id(knowledge_base_id)
-        if not knowledge_base_to_update:
+        knowledge_base_to_update = await self.repository.find_by_id_and_user_id(knowledge_base_id, user_id)
+        if knowledge_base_to_update is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="KnowledgeBase not found")
-
-        if knowledge_base_to_update.user_id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to update this knowledge base",
-            )
 
         existing = await self.repository.find_by_name_and_user(name=data.name, user_id=user_id)
         if existing and existing.id != knowledge_base_to_update.id:
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="KnowledgeBase name already exists")
 
         knowledge_base_to_update.name = data.name
-        knowledge_base_to_update.updated_at = datetime.now()
+        knowledge_base_to_update.updated_at = datetime.now(timezone.utc)
 
-        updated_knowledge_base = await self.repository.update(knowledge_base_to_update)
+        return await self.repository.update(knowledge_base_to_update)
 
-        return updated_knowledge_base
-
-    async def find_all(self, user_id: UUID) -> KnowledgeBaseListResponse:
-        knowledge_bases = await self.repository.find_all(user_id)
+    async def find_all_by_user_id(self, user_id: UUID) -> KnowledgeBaseListResponse:
+        knowledge_bases = await self.repository.find_all_by_user_id(user_id)
 
         return KnowledgeBaseListResponse(
             knowledge_bases=knowledge_bases

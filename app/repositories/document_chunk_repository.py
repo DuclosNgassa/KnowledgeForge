@@ -67,56 +67,77 @@ class DocumentChunkRepository:
             query_embedding,
             limit: int,
             user_id: UUID,
+            knowledge_base_ids: list[UUID] | None = None,
     ):
-        distance = (
-            DocumentChunk.embedding.cosine_distance(
-                query_embedding
+        if knowledge_base_ids is not None and not knowledge_base_ids:
+            return []
+
+        distance = DocumentChunk.embedding.cosine_distance(query_embedding)
+
+        stmt = (
+            select(DocumentChunk, distance.label("distance"))
+            .join(
+                Document,
+                Document.id == DocumentChunk.document_id,
+            )
+            .options(selectinload(DocumentChunk.document))
+            .where(
+                Document.user_id == user_id,
+                DocumentChunk.embedding.is_not(None),
             )
         )
 
-        result = await self.session.execute(
-            select(DocumentChunk, distance.label("distance"))
-            .options(selectinload(DocumentChunk.document))
-            .where(DocumentChunk.embedding.is_not(None))
-            .where(DocumentChunk.document.has(user_id=user_id))
-            .order_by(distance)
-            .limit(limit)
-        )
+        if knowledge_base_ids is not None:
+            stmt = stmt.where(
+                Document.knowledge_base_id.in_(knowledge_base_ids)
+            )
+
+        stmt = stmt.order_by(distance).limit(limit)
+
+        result = await self.session.execute(stmt)
         return result.all()
 
     async def do_keyword_search(
             self,
             query: str,
             user_id: UUID,
-            limit: int = 20
+            limit: int = 20,
+            knowledge_base_ids: list[UUID] | None = None,
     ):
+        if knowledge_base_ids is not None and not knowledge_base_ids:
+            return []
+
         ts_query = func.plainto_tsquery("simple", query)
+
+        keyword_score = func.ts_rank(
+            DocumentChunk.search_vector,
+            ts_query,
+        )
 
         stmt = (
             select(
                 DocumentChunk,
-                func.ts_rank(
-                    DocumentChunk.search_vector,
-                    ts_query,
-                ).label("keyword_score"),
+                keyword_score.label("keyword_score"),
             )
-            .options(selectinload(DocumentChunk.document))
             .join(
                 Document,
-                Document.id == DocumentChunk.document_id
-            ).where(
+                Document.id == DocumentChunk.document_id,
+            )
+            .options(selectinload(DocumentChunk.document))
+            .where(
                 Document.user_id == user_id,
                 DocumentChunk.search_vector.op("@@")(ts_query),
-            ).order_by(
-                func.ts_rank(
-                    DocumentChunk.search_vector,
-                    ts_query,
-                ).desc()
-            ).limit(limit)
+            )
         )
 
-        result = await self.session.execute(stmt)
+        if knowledge_base_ids is not None:
+            stmt = stmt.where(
+                Document.knowledge_base_id.in_(knowledge_base_ids)
+            )
 
+        stmt = stmt.order_by(keyword_score.desc()).limit(limit)
+
+        result = await self.session.execute(stmt)
         return result.all()
 
     async def find_by_ids(self, chunk_ids: list[UUID]) -> list[DocumentChunk]:

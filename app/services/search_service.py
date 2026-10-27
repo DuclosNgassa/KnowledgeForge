@@ -57,22 +57,32 @@ class SearchService:
         self.embedding_provider = embedding_provider
         self.document_chunk_repository = document_chunk_repository
 
-    async def do_similarity_search(self,
-                                   query: str,
-                                   user_id: UUID,
-                                   limit: int = 5,
-                                   ) -> list[SearchResult]:
+    async def do_similarity_search(
+            self,
+            query: str,
+            user_id: UUID,
+            limit: int = 5,
+            knowledge_base_ids: list[UUID] | None = None,
+    ) -> list[SearchResult]:
         with langfuse.start_as_current_observation(
                 as_type="retriever",
                 name="similarity_search",
                 input={
                     "query": query,
                     "limit": limit,
+                    "knowledge_base_ids": (
+                            [str(kb_id) for kb_id in knowledge_base_ids]
+                            if knowledge_base_ids is not None
+                            else None
+                    ),
                 },
         ) as observation:
             query_embeddings = await self.embedding_provider.embed_query(query)
 
-            rows = await self.document_chunk_repository.do_similarity_search(query_embeddings, limit, user_id)
+            rows = await self.document_chunk_repository.do_similarity_search(query_embeddings,
+                                                                             limit,
+                                                                             user_id,
+                                                                             knowledge_base_ids)
 
             results = [
                 SearchResult(
@@ -100,6 +110,7 @@ class SearchService:
             query: str,
             user_id: UUID,
             limit: int = 5,
+            knowledge_base_ids: list[UUID] | None = None,
     ) -> list[SearchResult]:
         with langfuse.start_as_current_observation(
                 as_type="retriever",
@@ -107,12 +118,18 @@ class SearchService:
                 input={
                     "query": query,
                     "limit": limit,
+                    "knowledge_base_ids": (
+                            [str(kb_id) for kb_id in knowledge_base_ids]
+                            if knowledge_base_ids is not None
+                            else None
+                    ),
                 },
         ) as observation:
             rows = await self.document_chunk_repository.do_keyword_search(
-                query,
-                user_id,
-                limit,
+                query=query,
+                user_id=user_id,
+                limit=limit,
+                knowledge_base_ids=knowledge_base_ids,
             )
 
             results = [
@@ -129,9 +146,7 @@ class SearchService:
             ]
 
             observation.update(
-                output={
-                    "result_count": len(results),
-                }
+                output={"result_count": len(results)}
             )
 
             return results
@@ -142,48 +157,50 @@ class SearchService:
             user_id: UUID,
             limit: int = 20,
             request_id: str | None = None,
+            knowledge_base_ids: list[UUID] | None = None,
     ) -> list[SearchResult]:
-        # 1. Semantic search
+        # An explicit empty scope must never broaden the search.
+        if knowledge_base_ids is not None and not knowledge_base_ids:
+            return []
+
         with langfuse.start_as_current_observation(
                 as_type="span",
                 name="hybrid_search",
                 input={
                     "query": query,
                     "limit": limit,
+                    "knowledge_base_ids": (
+                            [str(kb_id) for kb_id in knowledge_base_ids]
+                            if knowledge_base_ids is not None
+                            else None
+                    ),
                 },
         ) as observation:
+            # 1. Semantic search
             vector_results = await self.do_similarity_search(
                 query=query,
                 user_id=user_id,
                 limit=limit,
+                knowledge_base_ids=knowledge_base_ids,
             )
-
-            # print("Result of semantic search: ", vector_results)
 
             # 2. Keyword search
             keyword_results = await self.do_keyword_search(
                 query=query,
                 user_id=user_id,
                 limit=limit,
+                knowledge_base_ids=knowledge_base_ids,
             )
 
-            # print("Result of keyword search: ", vector_results)
-
-            result_lists = [vector_results, keyword_results]
-
-            # 3. Fuse results
+            # 3. Fuse the already-scoped results
             fused_results = _reciprocal_rank_fusion(
-                result_lists=result_lists
+                result_lists=[vector_results, keyword_results]
             )
-            print("\n")
-            # print("Final fusion search: ", vector_results)
 
-            results_hybrid_search = fused_results[:limit]
+            results = fused_results[:limit]
 
             observation.update(
-                output={
-                    "result_count": len(results_hybrid_search)
-                }
+                output={"result_count": len(results)}
             )
 
-            return results_hybrid_search
+            return results

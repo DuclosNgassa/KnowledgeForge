@@ -1,27 +1,28 @@
 import json
 from collections.abc import AsyncIterator
 from typing import Any
+from uuid import UUID
 
 from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage
 
 from langfuse._client.propagation import propagate_attributes
 from langfuse.langchain import CallbackHandler
+from langgraph.graph.state import CompiledStateGraph
 
-from app.models import ChatSession
+from app.agents.agent import create_agent
 from app.models.chat_message import MessageRole
 from app.observability.langfuse import langfuse
 from app.observability.logging import logger
 from app.schemas.agent_response import AgentResponse
 from app.services.chat_message_service import (
-    ChatMessageService,
     to_langchain_message,
 )
 from app.services.retrieval_collector import RetrievalCollector
 from app.schemas.search_result import WebSearchResult
 from app.services.web_search_collector import WebSearchCollector
 from app.services.conversation_context import ConversationContext
-from app.services.citation_service import CitationService
-from app.services.citation_grounding_service import CitationGroundingService
+from app.models import ChatSession
+from app.services.query_contextualizer import QueryContextualizer
 
 MAX_HISTORY_MESSAGES = 20
 
@@ -59,21 +60,30 @@ def build_web_context(results: list[WebSearchResult]) -> str:
 
 class AgentService:
     def __init__(self,
-                 agent,
-                 chat_message_service: ChatMessageService,
+                 search_service,
+                 document_service,
+                 user_id: UUID,
+                 request_id: str,
+                 chat_message_service,
                  streaming_model,
                  retrieval_collector: RetrievalCollector,
                  web_search_collector: WebSearchCollector,
                  conversation_context: ConversationContext,
-                 citation_service: CitationService,
-                 citation_grounding_service: CitationGroundingService,
+                 query_contextualizer: QueryContextualizer,
+                 citation_service,
+                 citation_grounding_service,
                  ):
-        self.agent = agent
+        self.search_service = search_service
+        self.document_service = document_service
+        self.user_id = user_id
+        self.request_id = request_id
+
         self.chat_message_service = chat_message_service
         self.streaming_model = streaming_model
         self.retrieval_collector = retrieval_collector
         self.web_search_collector = web_search_collector
         self.conversation_context = conversation_context
+        self.query_contextualizer = query_contextualizer
         self.citation_service = citation_service
         self.citation_grounding_service = citation_grounding_service
 
@@ -82,6 +92,9 @@ class AgentService:
             message: str,
             chat_session: ChatSession,
     ) -> AgentResponse:
+
+        agent = await self._create_agent(chat_session)
+
         history = await self.chat_message_service.get_messages_history(
             session_id=chat_session.id,
             limit=MAX_HISTORY_MESSAGES,
@@ -107,7 +120,7 @@ class AgentService:
                         user_id=str(chat_session.user_id),
                 ):
                     # Phase 1: agent orchestration and retrieval.
-                    response = await self.agent.ainvoke(
+                    response = await agent.ainvoke(
                         {"messages": messages},
                         config={"callbacks": [CallbackHandler()]},
                     )
@@ -193,6 +206,8 @@ class AgentService:
             message: str,
             chat_session: ChatSession,
     ) -> AsyncIterator[str]:
+        agent = await self._create_agent(chat_session)
+
         history = await self.chat_message_service.get_messages_history(
             session_id=chat_session.id,
             limit=MAX_HISTORY_MESSAGES,
@@ -219,7 +234,7 @@ class AgentService:
                             user_id=str(chat_session.user_id),
                     ):
                         # Phase 1: agent orchestration and retrieval.
-                        agent_result = await self.agent.ainvoke(
+                        agent_result = await agent.ainvoke(
                             {"messages": messages},
                             config={"callbacks": [CallbackHandler()]},
                         )
@@ -367,6 +382,20 @@ class AgentService:
                 )
         finally:
             self.conversation_context.reset_history(context_token)
+
+    async def _create_agent(self, chat_session: ChatSession) -> CompiledStateGraph[Any, None, Any, Any]:
+        agent = create_agent(
+            search_service=self.search_service,
+            document_service=self.document_service,
+            user_id=self.user_id,
+            request_id=self.request_id,
+            knowledge_base_ids=chat_session.knowledge_base_ids,
+            collector=self.retrieval_collector,
+            web_collector=self.web_search_collector,
+            conversation_context=self.conversation_context,
+            query_contextualizer=self.query_contextualizer,
+        )
+        return agent
 
     def _build_citation_messages(
             self,
