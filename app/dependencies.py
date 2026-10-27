@@ -28,8 +28,6 @@ from app.services.document_service import DocumentService
 from app.services.document_uploader import DocumentUploader
 from app.ingestion.embeddings.embedding_service import EmbeddingService
 from app.services.knowledge_base_service import KnowledgeBaseService
-from app.services.reranker.base import Reranker
-from app.services.reranker.cohere_reranker import CohereReranker
 from app.services.search_service import SearchService
 from app.services.user_service import UserService
 from langchain.chat_models import init_chat_model
@@ -148,8 +146,6 @@ def get_agent_service(
     document_repository = DocumentRepository(session)
     document_service = DocumentService(document_repository=document_repository)
 
-    reranker: Reranker = CohereReranker(api_key=settings.cohere_api_key)
-
     chat_message_service = get_chat_message_service(session)
 
     collector = RetrievalCollector()
@@ -160,7 +156,6 @@ def get_agent_service(
     agent = create_agent(
         search_service=search_service,
         document_service=document_service,
-        reranker=reranker,
         user_id=current_user_info["user_id"],
         request_id=request_id,
         collector=collector,

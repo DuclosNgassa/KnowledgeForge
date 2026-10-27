@@ -72,7 +72,6 @@ class CitationGroundingService:
            """
 
         result: CitationGroundingResult = await self.model.ainvoke(prompt)
-        print("Grounding result type: %s", type(result).__name__)
         # Keep only IDs that actually occur in the answer. This prevents the
         # evaluator from inventing citations in its structured assessment.
         answer_citations = set(

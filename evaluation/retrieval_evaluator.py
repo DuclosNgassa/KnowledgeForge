@@ -32,7 +32,6 @@ class SampleRetrievalResult:
     difficulty: str
     answerable: bool
     rrf: RankingMetrics | None
-    reranked: RankingMetrics | None
     rag_score: dict[str, float]
     grounding: dict | None = None
 
@@ -51,7 +50,6 @@ class RetrievalReport:
 
 
 HybridSearch = Callable[..., Awaitable[list[Any]]]
-Rerank = Callable[..., Awaitable[list[Any]]]
 
 
 def calculate_metrics(
@@ -94,7 +92,6 @@ def _record_sample_scores(
         span,
         sample_id: str,
         rrf_metrics,
-        reranked_metrics,
 ) -> None:
     span.update(
         metadata={
@@ -115,25 +112,11 @@ def _record_sample_scores(
                 data_type="NUMERIC",
             )
 
-    if reranked_metrics is not None:
-        for name, value in {
-            "reranked_recall_at_5": reranked_metrics.recall_at_5,
-            "reranked_precision_at_5": reranked_metrics.precision_at_5,
-            "reranked_mrr_at_20": reranked_metrics.mrr_at_20,
-            "reranked_hit_at_5": reranked_metrics.hit_at_5,
-        }.items():
-            span.score(
-                name=name,
-                value=float(value),
-                data_type="NUMERIC",
-            )
-
 
 class RetrievalEvaluator:
     def __init__(
             self,
             hybrid_search: HybridSearch,
-            rerank: Rerank,
             user_id: UUID,
             answer_generator: AnswerGenerator,
             citation_service: CitationService,
@@ -147,7 +130,6 @@ class RetrievalEvaluator:
             raise ValueError("candidate_k must be >= final_k")
 
         self.hybrid_search = hybrid_search
-        self.rerank = rerank
         self.user_id = user_id
         self.answer_generator = answer_generator
         self.citation_service = citation_service
@@ -158,12 +140,9 @@ class RetrievalEvaluator:
         self.min_request_interval = min_request_interval
         self.max_retries = max_retries
 
-        self._last_rerank_request = 0.0
-        self._rerank_lock = asyncio.Lock()
 
     @staticmethod
     def _chunk_ids(results: list[Any]) -> list[str]:
-        # Preserve ranking order and avoid duplicate chunk IDs.
         return list(dict.fromkeys(
             str(result.chunk_id) for result in results
         ))
@@ -191,18 +170,10 @@ class RetrievalEvaluator:
 
             rrf_ids = self._chunk_ids(candidates)
 
-            # Rerank candidates
-            reranked_results = await self._rerank_with_rate_limit(
-                query=sample["question"],
-                results=candidates,
-                top_k=self.candidate_k,
-                request_id=f"eval-{sample['id']}",
-            )
-
             # Build the citation registry from the retrieved evidence used as context.
             grounding_results = [
                 result
-                for result in reranked_results[:5]
+                for result in candidates
                 if result.content and result.content.strip()
             ]
 
@@ -271,7 +242,6 @@ class RetrievalEvaluator:
                     difficulty=sample["difficulty"],
                     answerable=False,
                     rrf=None,
-                    reranked=None,
                     rag_score=rag_score,
                     grounding=grounding,
                 )
@@ -306,19 +276,10 @@ class RetrievalEvaluator:
                 self.final_k,
             )
 
-            reranked_ids = self._chunk_ids(reranked_results)
-
-            reranked_metrics = calculate_metrics(
-                relevant_ids,
-                reranked_ids,
-                self.final_k,
-            )
-
             _record_sample_scores(
                 span,
                 sample["id"],
                 rrf_metrics,
-                reranked_metrics,
             )
 
             span.update(
@@ -326,7 +287,6 @@ class RetrievalEvaluator:
                     "answerable": True,
                     "relevant_chunk_ids": list(relevant_ids),
                     "rrf_chunk_ids": rrf_ids,
-                    "reranked_chunk_ids": reranked_ids,
                     "citation_grounding": grounding_report.model_dump(mode="json")
                 }
             )
@@ -337,7 +297,6 @@ class RetrievalEvaluator:
                 difficulty=sample["difficulty"],
                 answerable=True,
                 rrf=rrf_metrics,
-                reranked=reranked_metrics,
                 rag_score=rag_score,
                 grounding=grounding
             )
@@ -371,13 +330,8 @@ class RetrievalEvaluator:
                 [result.rrf for result in retrieval_samples]
             )
 
-            reranked_metrics = self._aggregate_metrics(
-                [result.reranked for result in retrieval_samples]
-            )
-
             retrieval_metrics = {
                 "rrf": rrf_metrics,
-                "reranked": reranked_metrics,
             }
 
             # Answer-quality metrics: evaluate answerable samples
@@ -459,7 +413,6 @@ class RetrievalEvaluator:
             span,
             sample_id: str,
             rrf_metrics: RankingMetrics | None,
-            reranked_metrics: RankingMetrics | None,
     ) -> None:
         span.update(
             metadata={
@@ -469,7 +422,6 @@ class RetrievalEvaluator:
 
         metric_groups = {
             "rrf": rrf_metrics,
-            "reranked": reranked_metrics,
         }
 
         for stage, metrics in metric_groups.items():
@@ -571,52 +523,6 @@ class RetrievalEvaluator:
 
         return result
 
-    async def _rerank_with_rate_limit(
-            self,
-            query,
-            results,
-            top_k,
-            request_id,
-    ):
-        async with self._rerank_lock:
-            for attempt in range(self.max_retries + 1):
-                elapsed = (
-                        time.monotonic()
-                        - self._last_rerank_request
-                )
-
-                wait_time = self.min_request_interval - elapsed
-
-                if wait_time > 0:
-                    await asyncio.sleep(wait_time)
-
-                # Record the time immediately before the API call.
-                self._last_rerank_request = time.monotonic()
-
-                try:
-                    return await self.rerank(
-                        query=query,
-                        results=results,
-                        top_k=top_k,
-                        request_id=request_id,
-                    )
-
-                except TooManyRequestsError:
-                    if attempt >= self.max_retries:
-                        raise
-
-                    # Wait for the rate-limit window to reset,
-                    # then increase the delay on subsequent retries.
-                    retry_delay = 65 * (2 ** attempt)
-
-                    print(
-                        "Cohere rate limit reached. "
-                        f"Retrying in {retry_delay} seconds "
-                        f"(attempt {attempt + 1}/"
-                        f"{self.max_retries})."
-                    )
-
-                    await asyncio.sleep(retry_delay)
 
     def _aggregate_grounding_metrics(
             self,

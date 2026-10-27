@@ -3,7 +3,6 @@ from uuid import UUID
 from langchain_core.tools import tool
 
 from app.schemas.retrieved_document import RetrievedDocument
-from app.services.reranker.base import Reranker
 from app.services.search_service import SearchService
 from app.services.retrieval_collector import RetrievalCollector
 from app.services.conversation_context import ConversationContext
@@ -12,7 +11,6 @@ from app.services.query_contextualizer import QueryContextualizer
 
 def create_search_documents_tool(
         search_service: SearchService,
-        reranker: Reranker,
         user_id: UUID,
         query_contextualizer: QueryContextualizer,
         conversation_context: ConversationContext,
@@ -43,17 +41,6 @@ def create_search_documents_tool(
         if not results:
             return []
 
-        # print("Search result before reranking: ", results)
-
-        # TODO use OPENAI as Reranker?
-        reranked_results = await reranker.rerank(
-            query=search_query,
-            results=results,
-            top_k=5,
-            request_id=request_id
-        )
-        # print("Search result after reranking: ", reranked_results)
-
         retrieved_documents = [
             RetrievedDocument(
                 chunk_id=str(result.chunk_id),
@@ -62,7 +49,7 @@ def create_search_documents_tool(
                 filename=result.file_name,
                 page_number=result.page_number,
             )
-            for result in reranked_results
+            for result in results
         ]
 
         if collector is not None:

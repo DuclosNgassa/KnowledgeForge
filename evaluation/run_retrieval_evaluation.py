@@ -35,7 +35,6 @@ debug_asyncio_run("after retrieval evaluator import")
 from app.repositories.document_chunk_repository import DocumentChunkRepository
 
 debug_asyncio_run("after DocumentChunkRepository import")
-from app.services.reranker.cohere_reranker import CohereReranker
 from app.services.search_service import SearchService
 from app.services.answer_generator import AnswerGenerator
 
@@ -44,7 +43,6 @@ debug_asyncio_run("after evaluation imports")
 
 async def run(
         search_service,
-        reranker_service,
         user_id: UUID,
 ) -> None:
     llm = ChatOpenAI(
@@ -59,7 +57,6 @@ async def run(
 
     evaluator = RetrievalEvaluator(
         hybrid_search=search_service.do_hybrid_search,
-        rerank=reranker_service.rerank,
         user_id=user_id,
         rag_quality_evaluator=rag_quality_evaluator,
         answer_generator=answer_generator,
@@ -102,9 +99,6 @@ async def main() -> None:
     )
 
     embedding_provider = get_openai_embedding_provider()
-    reranker_service = CohereReranker(
-        api_key=settings.cohere_api_key
-    )
 
     async with AsyncSessionLocal() as session:
         search_service = SearchService(
@@ -116,7 +110,6 @@ async def main() -> None:
 
         await run(
             search_service,
-            reranker_service,
             user_id,
         )
 

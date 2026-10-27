@@ -1,5 +1,5 @@
 """
-the first metrics should measure whether hybrid search, RRF, and reranking
+the first metrics should measure whether hybrid search, RRF
 retrieve the chunks that the dataset identifies as relevant.
 """
 from evaluation.schemas import EvaluationSample

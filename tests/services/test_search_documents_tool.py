@@ -47,20 +47,12 @@ def search_service():
     return service
 
 
-@pytest.fixture
-def reranker():
-    service = AsyncMock()
-    service.rerank.return_value = []
-    return service
-
-
 @pytest.mark.asyncio
 async def test_search_uses_contextualized_query(
         user_id,
         conversation_context,
         contextualizer,
         search_service,
-        reranker,
 ):
     """Retrieval should use the rewritten query, not the raw follow-up."""
 
@@ -78,11 +70,9 @@ async def test_search_uses_contextualized_query(
         )()
     ]
 
-    reranker.rerank.return_value = search_service.do_hybrid_search.return_value
 
     tool = create_search_documents_tool(
         search_service=search_service,
-        reranker=reranker,
         user_id=user_id,
         query_contextualizer=contextualizer,
         conversation_context=conversation_context,
@@ -101,64 +91,18 @@ async def test_search_uses_contextualized_query(
 
 
 @pytest.mark.asyncio
-async def test_reranker_receives_contextualized_query(
-        user_id,
-        conversation_context,
-        contextualizer,
-        search_service,
-        reranker,
-):
-    """Reranking should use the same query as the initial retrieval."""
-
-    result = type(
-        "SearchResult",
-        (),
-        {
-            "chunk_id": uuid4(),
-            "document_id": uuid4(),
-            "content": "Parental leave policy content.",
-            "file_name": "employee-handbook.pdf",
-            "page_number": 5,
-        },
-    )()
-
-    search_service.do_hybrid_search.return_value = [result]
-    reranker.rerank.return_value = [result]
-
-    tool = create_search_documents_tool(
-        search_service=search_service,
-        reranker=reranker,
-        user_id=user_id,
-        query_contextualizer=contextualizer,
-        conversation_context=conversation_context,
-    )
-
-    await tool.ainvoke({"query": "What about fathers in Germany?"})
-
-    reranker.rerank.assert_awaited_once()
-
-    kwargs = reranker.rerank.call_args.kwargs
-
-    assert kwargs["query"] == (
-        "Parental leave entitlements for fathers in Germany"
-    )
-
-
-@pytest.mark.asyncio
 async def test_returns_empty_list_when_no_documents_found(
         user_id,
         conversation_context,
         contextualizer,
         search_service,
-        reranker,
 ):
-    """No results should return an empty list without reranking."""
+    """No results should return an empty list."""
 
     search_service.do_hybrid_search.return_value = []
 
     tool = create_search_documents_tool(
         search_service=search_service,
-        reranker=reranker,
         user_id=user_id,
         query_contextualizer=contextualizer,
         conversation_context=conversation_context,
@@ -167,7 +111,6 @@ async def test_returns_empty_list_when_no_documents_found(
     result = await tool.ainvoke({"query": "What about fathers in Germany?"})
 
     assert result == []
-    reranker.rerank.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -176,7 +119,6 @@ async def test_returns_retrieved_documents(
         conversation_context,
         contextualizer,
         search_service,
-        reranker,
 ):
     """Retrieved search results should be converted to tool output."""
 
@@ -196,11 +138,9 @@ async def test_returns_retrieved_documents(
     )()
 
     search_service.do_hybrid_search.return_value = [result]
-    reranker.rerank.return_value = [result]
 
     tool = create_search_documents_tool(
         search_service=search_service,
-        reranker=reranker,
         user_id=user_id,
         query_contextualizer=contextualizer,
         conversation_context=conversation_context,
@@ -226,13 +166,11 @@ async def test_contextualizer_receives_current_history(
         conversation_context,
         contextualizer,
         search_service,
-        reranker,
 ):
     """The tool should pass the current conversation history to the rewriter."""
 
     tool = create_search_documents_tool(
         search_service=search_service,
-        reranker=reranker,
         user_id=user_id,
         query_contextualizer=contextualizer,
         conversation_context=conversation_context,
@@ -253,7 +191,6 @@ async def test_context_isolated_between_conversations(
         user_id,
         contextualizer,
         search_service,
-        reranker,
 ):
     """Different contexts must provide their own histories."""
 
@@ -269,7 +206,6 @@ async def test_context_isolated_between_conversations(
 
     first_tool = create_search_documents_tool(
         search_service=search_service,
-        reranker=reranker,
         user_id=user_id,
         query_contextualizer=contextualizer,
         conversation_context=first_context,
@@ -277,7 +213,6 @@ async def test_context_isolated_between_conversations(
 
     second_tool = create_search_documents_tool(
         search_service=search_service,
-        reranker=reranker,
         user_id=user_id,
         query_contextualizer=contextualizer,
         conversation_context=second_context,

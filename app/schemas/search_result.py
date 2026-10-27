@@ -5,7 +5,6 @@ from uuid import UUID
 @dataclass
 class BaseSearchResult:
     content: str
-    rerank_score: float | None = None
 
 # RAG layer's data structure.
 @dataclass(kw_only=True)

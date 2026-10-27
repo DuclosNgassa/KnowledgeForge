@@ -16,7 +16,6 @@ from app.services.query_contextualizer import QueryContextualizer
 def create_agent(
         search_service,
         document_service,
-        reranker,
         user_id,
         request_id,
         collector: RetrievalCollector | None = None,
@@ -29,7 +28,6 @@ def create_agent(
 
     search_documents = create_search_documents_tool(
         search_service=search_service,
-        reranker=reranker,
         user_id=user_id,
         request_id=request_id,
         collector=collector,

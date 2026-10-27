@@ -1,10 +1,9 @@
 ### Evaluation pipeline:
 
 1. Retrieve chunks using hybrid RRF.
-2. Rerank the candidates with Cohere.
-3. Generate the answer using your KnowledgeForge agent.
-4. Evaluate that answer with RAGAS.
-5. Record the scores alongside your existing retrieval metrics in Langfuse.
+2. Generate the answer using your KnowledgeForge agent.
+3. Evaluate that answer with RAGAS.
+4. Record the scores alongside your existing retrieval metrics in Langfuse.
 
 ### Run the evaluation
 
