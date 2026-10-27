@@ -131,8 +131,6 @@ def get_agent_service(
         settings.google_chat_model,
         streaming=True,
     )
-    conversation_context = ConversationContext()
-    query_contextualizer = QueryContextualizer(model=streaming_model)
 
     #    embedding_provider = get_google_embedding_provider()
     embedding_provider = get_openai_embedding_provider()
@@ -147,8 +145,6 @@ def get_agent_service(
 
     chat_message_service = get_chat_message_service(session)
 
-    collector = RetrievalCollector()
-    web_collector = WebSearchCollector()
     citation_service = CitationService()
     citation_grounding_service = CitationGroundingService(citation_service)
 
@@ -158,10 +154,6 @@ def get_agent_service(
         document_service=document_service,
         user_id=current_user_info["user_id"],
         request_id=request_id,
-        retrieval_collector=collector,
-        web_search_collector=web_collector,
-        conversation_context=conversation_context,
-        query_contextualizer=query_contextualizer,
         chat_message_service=chat_message_service,
         streaming_model=streaming_model,
         citation_service=citation_service,
