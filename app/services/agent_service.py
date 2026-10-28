@@ -190,16 +190,10 @@ class AgentService:
                     }
                 )
 
-            # TODO: Persist both messages in a single transaction.
-            await self.chat_message_service.add_message(
+            await self.chat_message_service.add_message_pair(
                 session_id=chat_session.id,
-                role=MessageRole.USER,
-                content=message,
-            )
-            await self.chat_message_service.add_message(
-                session_id=chat_session.id,
-                role=MessageRole.ASSISTANT,
-                content=final_answer,
+                user_content=message,
+                assistant_content=final_answer,
             )
 
             return result
@@ -354,16 +348,10 @@ class AgentService:
                         )
                     )
 
-                    # TODO: persist both messages in a single transaction.
-                    await self.chat_message_service.add_message(
+                    await self.chat_message_service.add_message_pair(
                         session_id=chat_session.id,
-                        role=MessageRole.USER,
-                        content=message,
-                    )
-                    await self.chat_message_service.add_message(
-                        session_id=chat_session.id,
-                        role=MessageRole.ASSISTANT,
-                        content=final_answer,
+                        user_content=message,
+                        assistant_content=final_answer,
                     )
 
                     observation.update(

@@ -57,3 +57,34 @@ class ChatMessageRepository:
 
         result = await self.session.execute(statement)
         return result.scalar_one()
+
+    async def create_pair(
+            self,
+            session_id: UUID,
+            user_content: str,
+            assistant_content: str,
+    ) -> tuple[ChatMessage, ChatMessage]:
+        first_sequence_number = await self.get_next_sequence_number(
+            session_id
+        )
+
+        user_message = ChatMessage(
+            session_id=session_id,
+            role=MessageRole.USER,
+            content=user_content,
+            sequence_number=first_sequence_number,
+        )
+
+        assistant_message = ChatMessage(
+            session_id=session_id,
+            role=MessageRole.ASSISTANT,
+            content=assistant_content,
+            sequence_number=first_sequence_number + 1,
+        )
+
+        self.session.add_all([user_message, assistant_message])
+
+        # Execute both INSERTs without committing the transaction.
+        await self.session.flush()
+
+        return user_message, assistant_message

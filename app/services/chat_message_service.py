@@ -31,11 +31,22 @@ class ChatMessageService:
             session_id: UUID,
             role: MessageRole,
             content: str, ) -> ChatMessage:
-        # print("add message {} with role {}".format(content, role))
         return await self.repository.create(
             session_id=session_id,
             role=role,
             content=content
+        )
+
+    async def add_message_pair(
+            self,
+            session_id: UUID,
+            user_content: str,
+            assistant_content: str,
+    ) -> tuple[ChatMessage, ChatMessage]:
+        return await self.repository.create_pair(
+            session_id=session_id,
+            user_content=user_content,
+            assistant_content=assistant_content,
         )
 
     async def get_messages_history(
