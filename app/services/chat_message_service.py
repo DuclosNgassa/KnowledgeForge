@@ -43,11 +43,15 @@ class ChatMessageService:
             user_content: str,
             assistant_content: str,
     ) -> tuple[ChatMessage, ChatMessage]:
-        return await self.repository.create_pair(
-            session_id=session_id,
-            user_content=user_content,
-            assistant_content=assistant_content,
-        )
+        try:
+            return await self.repository.create_pair(
+                session_id=session_id,
+                user_content=user_content,
+                assistant_content=assistant_content,
+            )
+        except Exception:
+            await self.repository.session.rollback()
+            raise
 
     async def get_messages_history(
             self,
