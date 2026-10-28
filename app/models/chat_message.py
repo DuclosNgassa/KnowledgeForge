@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 from uuid import uuid4
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, Text, DateTime, func, Enum as SQLEnum, Integer
+from sqlalchemy import ForeignKey, Text, DateTime, func, Enum as SQLEnum, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql.base import UUID
 from enum import StrEnum
@@ -21,6 +21,14 @@ if TYPE_CHECKING:
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
+
+    __table_args__ = (
+        UniqueConstraint(
+            "session_id",
+            "sequence_number",
+            name="uq_chat_messages_session_sequence",
+        ),
+    )
 
     id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),

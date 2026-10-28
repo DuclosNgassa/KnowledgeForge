@@ -6,6 +6,8 @@ from app.models import ChatMessage
 from app.models.chat_message import MessageRole
 from sqlalchemy import func, select
 
+from app.models import ChatSession
+
 
 class ChatMessageRepository:
     def __init__(self, session: AsyncSession):
@@ -64,6 +66,7 @@ class ChatMessageRepository:
             user_content: str,
             assistant_content: str,
     ) -> tuple[ChatMessage, ChatMessage]:
+        await self.lock_session(session_id)
         first_sequence_number = await self.get_next_sequence_number(
             session_id
         )
@@ -88,3 +91,14 @@ class ChatMessageRepository:
         await self.session.flush()
 
         return user_message, assistant_message
+
+    async def lock_session(self, session_id: UUID) -> None:
+        statement = (
+            select(ChatSession.id)
+            .where(ChatSession.id == session_id)
+            .with_for_update()
+        )
+        result = await self.session.execute(statement)
+
+        if result.scalar_one_or_none() is None:
+            raise ValueError(f"Chat session not found: {session_id}")
