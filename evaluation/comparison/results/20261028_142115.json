@@ -1,0 +1,20 @@
+[
+  {
+    "provider": "ollama",
+    "model_name": "qwen3:4b",
+    "question": "What is AI? Answer shortly in 1-2 sentences using my stored documents",
+    "expected_answer": "Artificial intelligence (AI) refers to the capability of machines to use algorithms to autonomously perform tasks and imitate human processes, such as logical thinking, learning, planning, and creativity [D5]. It involves delegating decision-making and problem-solving responsibilities to these systems, which is increasingly reshaping modern scientific and creative discourse [D1, D5].",
+    "answer": "AI refers to the ability of machines to autonomously perform tasks using algorithms and imitate human processes of problem-solving and decision-making, including logical thinking, learning, planning, and creativity [D5].",
+    "latency_second": 118.281,
+    "error": null
+  },
+  {
+    "provider": "ollama",
+    "model_name": "llama3.2:3b",
+    "question": "What is AI? Answer shortly in 1-2 sentences using my stored documents",
+    "expected_answer": "Artificial intelligence (AI) refers to the capability of machines to use algorithms to autonomously perform tasks and imitate human processes, such as logical thinking, learning, planning, and creativity [D5]. It involves delegating decision-making and problem-solving responsibilities to these systems, which is increasingly reshaping modern scientific and creative discourse [D1, D5].",
+    "answer": "According to [D5], AI (Künstliche Intelligenz) refers to the ability of machines to autonomously perform tasks using algorithms, mimicking human processes of problem-solving and decision-making, including imitation of human capabilities such as logical thinking, learning, planning, and creativity. [D5]",
+    "latency_second": 16.755,
+    "error": null
+  }
+]

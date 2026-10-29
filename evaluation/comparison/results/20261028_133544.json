@@ -1,0 +1,28 @@
+[
+  {
+    "provider": "google_genai",
+    "model_name": "gemini-3.1-flash-lite",
+    "question": "What is AI? Answer shortly in 1-2 sentences using my stored documents",
+    "expected_answer": "Artificial intelligence (AI) refers to the capability of machines to use algorithms to autonomously perform tasks and imitate human processes, such as logical thinking, learning, planning, and creativity [D5]. It involves delegating decision-making and problem-solving responsibilities to these systems, which is increasingly reshaping modern scientific and creative discourse [D1, D5].",
+    "answer": [
+      {
+        "type": "text",
+        "text": "AI refers to the ability of machines to use algorithms to autonomously perform tasks by mimicking human problem-solving and decision-making processes [D5]. This includes the imitation of human capabilities such as logical thinking, learning, planning, and creativity [D5].",
+        "extras": {
+          "signature": "EnMKcQFpFH0TQP7lEsOkJ47yLDiO7agg3HxVKEPeZn5KiwhD5UFjRLeCaRXEcS3WfMvC0qfEozgztPq6mVXPhk0K2cH/NDfFgmRl7e/EBGi8VWBO6NcHDcHQK9GHuvcUEsPGZcsaPlFSNNbeKxUPZVu24Ltw"
+        }
+      }
+    ],
+    "latency_second": 1.638,
+    "error": null
+  },
+  {
+    "provider": "huggingface",
+    "model_name": "Qwen/Qwen3-30B-A3B",
+    "question": "What is AI? Answer shortly in 1-2 sentences using my stored documents",
+    "expected_answer": "Artificial intelligence (AI) refers to the capability of machines to use algorithms to autonomously perform tasks and imitate human processes, such as logical thinking, learning, planning, and creativity [D5]. It involves delegating decision-making and problem-solving responsibilities to these systems, which is increasingly reshaping modern scientific and creative discourse [D1, D5].",
+    "answer": null,
+    "latency_second": 0.371,
+    "error": "APIStatusError:Error code: 402 - {'error': 'You have no remaining credits. Purchase pre-paid credits to continue using Inference Providers. Alternatively, subscribe to PRO to get monthly included credits.'}"
+  }
+]

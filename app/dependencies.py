@@ -29,10 +29,10 @@ from app.ingestion.embeddings.embedding_service import EmbeddingService
 from app.services.knowledge_base_service import KnowledgeBaseService
 from app.services.search_service import SearchService
 from app.services.user_service import UserService
-from langchain.chat_models import init_chat_model
 
 from app.services.citation_service import CitationService
 from app.services.citation_grounding_service import CitationGroundingService
+from app.llm.model_factory import create_chat_model
 
 
 def get_user_service(
@@ -123,12 +123,9 @@ def get_agent_service(
 ) -> AgentService:
     request_id = request.state.request_id
 
-    streaming_model = init_chat_model(
-        settings.google_chat_model,
-        streaming=True,
-    )
+    streaming_model = create_chat_model(streaming=True)
 
-    #    embedding_provider = get_google_embedding_provider()
+    # embedding_provider = get_google_embedding_provider()
     embedding_provider = get_openai_embedding_provider()
 
     search_service = SearchService(

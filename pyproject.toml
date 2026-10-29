@@ -44,6 +44,7 @@ dependencies = [
     "langchain-core>=1.6.3",
     "langchain-google-genai>=3.2.0",
     "langchain-google-vertexai>=3.2.4",
+    "langchain-ollama>=1.1.0",
     "langchain-openai>=1.6.2",
     "langchain-tavily>=0.2.18",
     "langchain-text-splitters>=1.1.2",

@@ -1,6 +1,11 @@
 import asyncio
 
+from dotenv import load_dotenv
+from pathlib import Path
 from langchain_openai import ChatOpenAI
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / ".env")
 
 from app.services.citation_grounding_service import CitationGroundingService
 from app.services.citation_service import CitationService

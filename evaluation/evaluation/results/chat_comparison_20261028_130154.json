@@ -1,0 +1,28 @@
+[
+  {
+    "provider": "google_genai",
+    "model_name": "gemini-3.6-flash",
+    "question": "What is AI? Answer shortly in 1-2 sentences using my stored documents",
+    "expected_answer": "Artificial intelligence (AI) refers to the capability of machines to use algorithms to autonomously perform tasks and imitate human processes, such as logical thinking, learning, planning, and creativity [D5]. It involves delegating decision-making and problem-solving responsibilities to these systems, which is increasingly reshaping modern scientific and creative discourse [D1, D5].",
+    "answer": [
+      {
+        "type": "text",
+        "text": "Artificial Intelligence (AI) refers to the ability of machines to autonomously perform tasks using algorithms while mimicking human problem-solving and decision-making processes [D5]. This includes imitating human capabilities such as logical thinking, learning, planning, and creativity [D5].",
+        "extras": {
+          "signature": "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"
+        }
+      }
+    ],
+    "latency_second": 11.024,
+    "error": null
+  },
+  {
+    "provider": "huggingface",
+    "model_name": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+    "question": "What is AI? Answer shortly in 1-2 sentences using my stored documents",
+    "expected_answer": "Artificial intelligence (AI) refers to the capability of machines to use algorithms to autonomously perform tasks and imitate human processes, such as logical thinking, learning, planning, and creativity [D5]. It involves delegating decision-making and problem-solving responsibilities to these systems, which is increasingly reshaping modern scientific and creative discourse [D1, D5].",
+    "answer": null,
+    "latency_second": 1.283,
+    "error": "OpenAIInvalidRequestError:Error code: 400 - {'error': {'message': \"The requested model 'Qwen/Qwen3-30B-A3B-Instruct-2507' is not supported by any provider you have enabled.\", 'type': 'invalid_request_error', 'param': 'model', 'code': 'model_not_supported'}}"
+  }
+]

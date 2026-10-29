@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     openai_chat_model: str = "gpt-4o-mini"
     google_embedding_model: str = "gemini-embedding-001"
     google_api_key: str
-    google_chat_model: str = "google_genai:gemini-3.6-flash"
+    google_chat_model: str = "gemini-3.6-flash"
     user_agent: str = "KnowledgeForge/1.0"
     tavily_api_key: str
     cohere_api_key: str
@@ -24,6 +24,12 @@ class Settings(BaseSettings):
     langfuse_secret_key: str
     langfuse_base_url: str = "https://cloud.langfuse.com"
     langfuse_tracing_environment: str = "development"
+
+    chat_model_provider: str = "google_genai"
+
+    huggingface_api_key: str | None = None
+    huggingface_chat_model: str = "Qwen/Qwen3-30B-A3B-Instruct-2507"
+    huggingface_base_url: str = "https://router.huggingface.co/v1"
 
     model_config = SettingsConfigDict(
         env_file=".env",

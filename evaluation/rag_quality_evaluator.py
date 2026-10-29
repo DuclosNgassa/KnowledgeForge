@@ -16,7 +16,7 @@ try:
     from ragas import SingleTurnSample
     from ragas.embeddings import embedding_factory
     from ragas.llms import llm_factory
-    from ragas.metrics import AnswerRelevancy, Faithfulness
+    from ragas.metrics import AnswerRelevancy, AnswerSimilarity, Faithfulness, AnswerCorrectness
 
 finally:
     # Restore nest_asyncio for any other code that uses it.
@@ -42,6 +42,13 @@ class RagQualityEvaluator:
             llm=evaluator_llm,
             embeddings=evaluator_embeddings,
         )
+        self.answer_correctness = AnswerCorrectness(
+            llm=evaluator_llm,
+            embeddings=evaluator_embeddings,
+            answer_similarity=AnswerSimilarity(
+                embeddings=evaluator_embeddings,
+            ),
+        )
 
         self.abstention_judge = ChatOpenAI(
             model=settings.openai_chat_model,
@@ -53,26 +60,34 @@ class RagQualityEvaluator:
             self,
             question: str,
             answer: str,
-            contexts: list[str]
+            contexts: list[str],
+            expected_answer: str | None = None,
     ) -> dict[str, float]:
         sample = SingleTurnSample(
             user_input=question,
             response=answer,
             retrieved_contexts=contexts,
+            reference=expected_answer,
         )
 
-        faithfulness_result = await self.faithfulness.single_turn_ascore(
+        faithfulness = await self.faithfulness.single_turn_ascore(
             sample
         )
 
-        relevancy_result = await self.answer_relevancy.single_turn_ascore(
+        answer_relevancy = await self.answer_relevancy.single_turn_ascore(
             sample
         )
 
-        return {
-            "faithfulness": float(faithfulness_result),
-            "answer_relevancy": float(relevancy_result),
+        scores = {
+            "faithfulness": float(faithfulness),
+            "answer_relevancy": float(answer_relevancy),
         }
+
+        if expected_answer is not None:
+            correctness = await self.answer_correctness.single_turn_ascore(sample)
+            scores["answer_correctness"] = float(correctness)
+
+        return scores
 
     async def evaluate_unanswerable(
             self,

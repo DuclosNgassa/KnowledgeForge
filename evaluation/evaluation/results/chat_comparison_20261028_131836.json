@@ -1,0 +1,20 @@
+[
+  {
+    "provider": "google_genai",
+    "model_name": "google_genai:gemini-3.1-flash-lite",
+    "question": "What is AI? Answer shortly in 1-2 sentences using my stored documents",
+    "expected_answer": "Artificial intelligence (AI) refers to the capability of machines to use algorithms to autonomously perform tasks and imitate human processes, such as logical thinking, learning, planning, and creativity [D5]. It involves delegating decision-making and problem-solving responsibilities to these systems, which is increasingly reshaping modern scientific and creative discourse [D1, D5].",
+    "answer": null,
+    "latency_second": 278.551,
+    "error": "NotFound:404 models/google_genai:gemini-3.1-flash-lite is not found for API version v1beta, or is not supported for generateContent. Call ModelService.ListModels to see the list of available models and their supported methods."
+  },
+  {
+    "provider": "huggingface",
+    "model_name": "Qwen/Qwen3-30B-A3B",
+    "question": "What is AI? Answer shortly in 1-2 sentences using my stored documents",
+    "expected_answer": "Artificial intelligence (AI) refers to the capability of machines to use algorithms to autonomously perform tasks and imitate human processes, such as logical thinking, learning, planning, and creativity [D5]. It involves delegating decision-making and problem-solving responsibilities to these systems, which is increasingly reshaping modern scientific and creative discourse [D1, D5].",
+    "answer": null,
+    "latency_second": 37.529,
+    "error": "OpenAIConnectionError:Connection error."
+  }
+]
