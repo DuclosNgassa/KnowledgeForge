@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 
 from app.ingestion.embeddings.embedding_provider import EmbeddingProvider
@@ -27,7 +28,7 @@ def _reciprocal_rank_fusion(
                         + 1.0 / (k + rank)
                 )
 
-                items[chunk_id] = item
+                items.setdefault(chunk_id, item)
 
         ranked_ids = sorted(
             scores,
@@ -150,6 +151,49 @@ class SearchService:
             )
 
             return results
+
+    async def do_multi_query_hybrid_search(
+            self,
+            queries: list[str],
+            user_id: UUID,
+            limit: int = 5,
+            request_id: str | None = None,
+            knowledge_base_ids: list[UUID] | None = None,
+    ) -> list[SearchResult]:
+        """Retrieve across multiple queries and fuse their rankings."""
+
+        unique_queries = list(
+            dict.fromkeys(
+                query.strip()
+                for query in queries
+                if query and query.strip()
+            )
+        )
+
+        if not unique_queries:
+            return []
+
+        if knowledge_base_ids is not None and not knowledge_base_ids:
+            return []
+
+        result_lists = await asyncio.gather(
+            *[
+                self.do_hybrid_search(
+                    query=query,
+                    user_id=user_id,
+                    limit=limit,
+                    request_id=request_id,
+                    knowledge_base_ids=knowledge_base_ids
+                )
+                for query in unique_queries
+            ]
+        )
+
+        fused_results = _reciprocal_rank_fusion(
+            result_lists=result_lists,
+        )
+
+        return fused_results[:limit]
 
     async def do_hybrid_search(
             self,

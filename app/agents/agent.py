@@ -2,7 +2,7 @@ from uuid import UUID
 
 from deepagents import create_deep_agent
 from langchain.agents.structured_output import ToolStrategy
-
+from langchain.chat_models import init_chat_model
 from app.agents.tools.document_content import create_get_document_content_tool
 from app.agents.tools.document_search import create_search_documents_tool
 from app.agents.tools.document import create_get_document_metadata_tool
@@ -13,6 +13,7 @@ from app.services.retrieval_collector import RetrievalCollector
 from app.services.web_search_collector import WebSearchCollector
 from app.services.conversation_context import ConversationContext
 from app.services.query_contextualizer import QueryContextualizer
+from app.services.query_expander import QueryExpander
 
 
 def create_agent(
@@ -24,10 +25,13 @@ def create_agent(
         collector: RetrievalCollector | None = None,
         web_collector: WebSearchCollector | None = None,
         query_contextualizer: QueryContextualizer | None = None,
+        query_expander: QueryExpander | None = None,
         conversation_context: ConversationContext | None = None,
 ):
-    if query_contextualizer is None or conversation_context is None:
-        raise ValueError("Query contextualizer and conversation context are required")
+    if (query_expander is None or
+            query_contextualizer is None or
+            conversation_context is None):
+        raise ValueError("Query Expander and query contextualizer and conversation context are required")
 
     search_documents = create_search_documents_tool(
         search_service=search_service,
@@ -37,6 +41,7 @@ def create_agent(
         collector=collector,
         query_contextualizer=query_contextualizer,
         conversation_context=conversation_context,
+        query_expander=query_expander,
     )
 
     get_document_metadata = create_get_document_metadata_tool(
@@ -55,8 +60,14 @@ def create_agent(
         collector=web_collector,
     )
 
-    return create_deep_agent(
+    chat_model = init_chat_model(
         model=settings.google_chat_model,
+        model_provider="google_genai",
+        temperature=0,
+    )
+
+    return create_deep_agent(
+        model=chat_model,
         tools=[
             search_documents,
             get_document_metadata,

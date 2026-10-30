@@ -3,6 +3,7 @@ from uuid import UUID
 from langchain_core.tools import tool
 
 from app.schemas.retrieved_document import RetrievedDocument
+from app.services.query_expander import QueryExpander
 from app.services.search_service import SearchService
 from app.services.retrieval_collector import RetrievalCollector
 from app.services.conversation_context import ConversationContext
@@ -14,6 +15,7 @@ def create_search_documents_tool(
         user_id: UUID,
         query_contextualizer: QueryContextualizer,
         conversation_context: ConversationContext,
+        query_expander: QueryExpander,
         request_id: str | None = None,
         collector: RetrievalCollector | None = None,
         knowledge_base_ids: list[UUID] | None = None,
@@ -27,18 +29,31 @@ def create_search_documents_tool(
          documents is needed
          """
 
+        # 1. Resolve conversational references.
         search_query = await query_contextualizer.contextualize(
             question=query,
             history=conversation_context.history,
         )
 
-        results = await search_service.do_hybrid_search(
-            query=search_query,
+        # 2. Generate alternative search queries.
+        queries = await query_expander.expand(search_query)
+
+        # 3. Retrieve and fuse the results.
+        results = await search_service.do_multi_query_hybrid_search(
+            queries=queries,
             user_id=user_id,
             limit=5,
             request_id=request_id,
             knowledge_base_ids=knowledge_base_ids,
         )
+
+        # results = await search_service.do_hybrid_search(
+        #     query=search_query,
+        #     user_id=user_id,
+        #     limit=5,
+        #     request_id=request_id,
+        #     knowledge_base_ids=knowledge_base_ids,
+        # )
 
         if not results:
             return []

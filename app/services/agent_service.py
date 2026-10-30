@@ -7,10 +7,8 @@ from langchain_core.messages import HumanMessage, SystemMessage, BaseMessage
 
 from langfuse._client.propagation import propagate_attributes
 from langfuse.langchain import CallbackHandler
-from langgraph.graph.state import CompiledStateGraph
 
 from app.agents.agent import create_agent
-from app.models.chat_message import MessageRole
 from app.observability.langfuse import langfuse
 from app.observability.logging import logger
 from app.schemas.agent_response import AgentResponse
@@ -21,6 +19,7 @@ from app.schemas.search_result import WebSearchResult
 from app.models import ChatSession
 from app.services.conversation_context import ConversationContext
 from app.services.query_contextualizer import QueryContextualizer
+from app.services.query_expander import QueryExpander
 from app.services.retrieval_collector import RetrievalCollector
 from app.services.web_search_collector import WebSearchCollector
 
@@ -88,6 +87,7 @@ class AgentService:
             conversation_context,
             messages,
             query_contextualizer,
+            query_expander,
             retrieval_collector,
             web_search_collector,
         ) = await self.setup(chat_session)
@@ -103,6 +103,7 @@ class AgentService:
                 web_search_collector=web_search_collector,
                 conversation_context=conversation_context,
                 query_contextualizer=query_contextualizer,
+                query_expander=query_expander,
             )
 
             messages.append(HumanMessage(content=message))
@@ -210,6 +211,7 @@ class AgentService:
             conversation_context,
             messages,
             query_contextualizer,
+            query_expander,
             retrieval_collector,
             web_search_collector,
         ) = await self.setup(chat_session)
@@ -225,6 +227,7 @@ class AgentService:
                 web_search_collector=web_search_collector,
                 conversation_context=conversation_context,
                 query_contextualizer=query_contextualizer,
+                query_expander=query_expander,
             )
 
             messages.append(HumanMessage(content=message))
@@ -396,7 +399,9 @@ class AgentService:
             conversation_context.reset_history(context_token)
 
     async def setup(self, chat_session: ChatSession) -> tuple[
-        ConversationContext, list[BaseMessage], QueryContextualizer, RetrievalCollector, WebSearchCollector]:
+        ConversationContext, list[
+            BaseMessage], QueryContextualizer, QueryExpander, RetrievalCollector, WebSearchCollector]:
+
         history = await self.chat_message_service.get_messages_history(
             session_id=chat_session.id,
             limit=MAX_HISTORY_MESSAGES,
@@ -412,12 +417,15 @@ class AgentService:
             model=self.streaming_model,
         )
 
+        query_expander = QueryExpander(model=self.streaming_model)
+
         retrieval_collector = RetrievalCollector()
         web_search_collector = WebSearchCollector()
         return (
             conversation_context,
             messages,
             query_contextualizer,
+            query_expander,
             retrieval_collector,
             web_search_collector,
         )
@@ -428,7 +436,8 @@ class AgentService:
             retrieval_collector,
             web_search_collector,
             conversation_context,
-            query_contextualizer
+            query_contextualizer,
+            query_expander,
     ):
 
         return create_agent(
@@ -441,6 +450,7 @@ class AgentService:
             web_collector=web_search_collector,
             conversation_context=conversation_context,
             query_contextualizer=query_contextualizer,
+            query_expander=query_expander,
         )
 
     def _build_citation_messages(

@@ -43,7 +43,6 @@ dependencies = [
     "langchain-community<0.4.2",
     "langchain-core>=1.6.3",
     "langchain-google-genai>=3.2.0",
-    "langchain-google-vertexai>=3.2.4",
     "langchain-ollama>=1.1.0",
     "langchain-openai>=1.6.2",
     "langchain-tavily>=0.2.18",
@@ -107,6 +106,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
 ]
 [tool.pytest.ini_options]
