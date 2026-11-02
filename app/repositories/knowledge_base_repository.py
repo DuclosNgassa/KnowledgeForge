@@ -20,6 +20,15 @@ class KnowledgeBaseRepository:
 
         return knowledge_base
 
+    async def find_by_id(self, knowledge_base_id: UUID, user_id: UUID) -> KnowledgeBase | None:
+        statement = (select(KnowledgeBase)
+                     .where(KnowledgeBase.id == knowledge_base_id)
+                     .where(KnowledgeBase.user_id == user_id)
+                     )
+        result = await self.db.execute(statement)
+
+        return result.scalar_one_or_none()
+
     async def find_by_name_and_user(
             self,
             name: str,
@@ -68,7 +77,7 @@ class KnowledgeBaseRepository:
         result = await self.db.scalars(statement)
 
         return list(result.all())
-    
+
     async def update(self, knowledge_base: KnowledgeBase) -> KnowledgeBase:
         await self.db.commit()
         await self.db.refresh(knowledge_base)

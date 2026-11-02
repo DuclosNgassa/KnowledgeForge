@@ -11,6 +11,8 @@ class DocumentResponse(BaseModel):
     knowledge_base_id: UUID | None = None
     status: DocumentStatus
     file_name: str
+    title: str | None
+    description: str | None
     document_type: str
     status: DocumentStatus
     created_at: datetime
@@ -19,3 +21,11 @@ class DocumentResponse(BaseModel):
         from_attributes=True,
         extra="ignore",
     )
+
+
+class DocumentListResponse(BaseModel):
+    items: list[DocumentResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int

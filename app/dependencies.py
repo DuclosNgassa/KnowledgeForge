@@ -58,11 +58,19 @@ def get_document_uploader(
     )
 
 
+def get_document_service(
+        db: Annotated[AsyncSession, Depends(get_db)],
+) -> DocumentService:
+    document_repository = DocumentRepository(db)
+    knowledge_base_repository = KnowledgeBaseRepository(db)
+    return DocumentService(document_repository, knowledge_base_repository)
+
 def get_ingestion_service(
         db: Annotated[AsyncSession, Depends(get_db)],
 ) -> IngestionService:
     document_repository = DocumentRepository(db)
-    document_service = DocumentService(document_repository)
+    knowledge_base_repository = KnowledgeBaseRepository(db)
+    document_service = DocumentService(document_repository, knowledge_base_repository)
     document_chunk_repository = DocumentChunkRepository(db)
     document_chunk_service = DocumentChunkService(document_chunk_repository)
     document_loader = DocumentLoader()
@@ -140,7 +148,6 @@ def get_agent_service(
 
     citation_service = CitationService()
     citation_grounding_service = CitationGroundingService(citation_service)
-
 
     return AgentService(
         search_service=search_service,

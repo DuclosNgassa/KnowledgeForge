@@ -41,7 +41,7 @@ async def create_knowledge_base(
     return KnowledgeBaseResponse.model_validate(knowledge_base)
 
 
-@router.put(
+@router.patch(
     "/{knowledge_base_id}",
     response_model=KnowledgeBaseResponse,
     status_code=status.HTTP_200_OK,
@@ -95,7 +95,6 @@ async def find_all(
 ) -> KnowledgeBaseListResponse:
     user_id = user_detail["user_id"]
     return await service.find_all_by_user_id(user_id)
-
 
 @router.delete(
     "/{knowledge_base_id}",

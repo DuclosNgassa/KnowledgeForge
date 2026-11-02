@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -43,6 +43,42 @@ class DocumentRepository:
 
         return result.scalar_one_or_none()
 
+    async def find_all(self,
+                       user_id: UUID,
+                       offset: int,
+                       limit: int,
+                       status: DocumentStatus | None = None,
+                       document_type: str | None = None,
+                       sort_order: str = "desc",
+                       ) -> list[Document]:
+
+        filters = [
+            Document.user_id == user_id,
+        ]
+
+        if status is not None:
+            filters.append(Document.status == status)
+
+        if document_type is not None:
+            filters.append(Document.document_type == document_type)
+
+        sort_column = (
+            Document.created_at.asc()
+            if sort_order == "asc"
+            else Document.created_at.desc()
+        )
+
+        statement = (
+            select(Document)
+            .where(*filters)
+            .order_by(sort_column, Document.id.asc())
+            .offset(offset)
+            .limit(limit)
+        )
+
+        result = await self.db.execute(statement)
+        return list(result.scalars().all())
+
     async def find_document_chunk_by_id(self, document_id: UUID, user_id: UUID) -> Document | None:
         statement = (
             select(Document)
@@ -63,3 +99,76 @@ class DocumentRepository:
             .where(Document.id == document_id)
             .values(status=DocumentStatus.READY)
         )
+
+    async def update_knowledge_base(self, document: Document, knowledge_base_id: UUID) -> Document:
+        document.knowledge_base_id = knowledge_base_id
+
+        await self.db.flush()
+
+        return document
+
+    async def find_documents_by_knowledge_base(
+            self,
+            knowledge_base_id: UUID,
+            user_id: UUID,
+            offset: int,
+            limit: int,
+            status: DocumentStatus | None = None,
+            document_type: str | None = None,
+            sort_order: str = "desc",
+    ) -> tuple[list[Document], int]:
+
+        filters = [
+            Document.knowledge_base_id == knowledge_base_id,
+            Document.user_id == user_id,
+        ]
+
+        if status is not None:
+            filters.append(Document.status == status)
+
+        if document_type is not None:
+            filters.append(Document.document_type == document_type)
+
+        sort_column = (
+            Document.created_at.asc()
+            if sort_order == "asc"
+            else Document.created_at.desc()
+        )
+
+        statement = (
+            select(Document)
+            .where(*filters)
+            .order_by(sort_column, Document.id.asc())
+            .offset(offset)
+            .limit(limit)
+        )
+
+        result = await self.db.execute(statement)
+        documents = list(result.scalars().all())
+
+        count_statement = (
+            select(func.count(Document.id))
+            .where(*filters)
+        )
+
+        count_result = await self.db.execute(count_statement)
+        total = count_result.scalar_one()
+
+        return documents, total
+
+    async def update_metadata(
+            self,
+            document: Document,
+            title: str | None,
+            description: str | None,
+            update_title: bool,
+            update_description: bool,
+    ) -> Document:
+        if update_title:
+            document.title = title
+        if update_description:
+            document.description = description
+
+        await self.db.flush()
+
+        return document

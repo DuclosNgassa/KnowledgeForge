@@ -41,6 +41,16 @@ class Document(Base):
         nullable=False,
     )
 
+    title: Mapped[str] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
+    description: Mapped[str] = mapped_column(
+        Text,
+        nullable=True,
+    )
+
     document_type: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
