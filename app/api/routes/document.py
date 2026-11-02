@@ -162,3 +162,15 @@ async def upload_from_url(
         user_id=user_id,
         knowledge_base_id=request.knowledge_base_id
     )
+
+
+@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_document(
+        document_id: UUID,
+        current_user_info: dict = Depends(get_current_user_info),
+        document_service: DocumentService = Depends(get_document_service),
+):
+    await document_service.delete_document(
+        document_id=document_id,
+        user_id=current_user_info["user_id"],
+    )

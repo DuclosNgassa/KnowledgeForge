@@ -142,3 +142,14 @@ class DocumentService:
             update_title="title" in request.model_fields_set,
             update_description="description" in request.model_fields_set,
         )
+
+    async def delete_document(
+            self,
+            document_id: UUID,
+            user_id: UUID,
+    ) -> None:
+        document = await self.document_repository.find_document_by_id(document_id, user_id)
+        if document is None:
+            raise NotFoundException(f"Document not found. [document_id={document_id}]")
+
+        await self.document_repository.delete(document)

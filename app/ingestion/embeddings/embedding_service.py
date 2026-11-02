@@ -91,23 +91,36 @@ class EmbeddingService:
 
     async def embed_chunks(
             self,
-            chunk_ids: list[UUID], ) -> int:
+            chunk_ids: list[UUID],
+    ) -> int:
 
         chunks = await self.repository.find_by_ids(chunk_ids)
-        if len(chunks) != len(chunk_ids):
-            raise ValueError(
-                f"Expected {len(chunk_ids)} chunks, but got {len(chunks)}"
-            )
 
         if not chunks:
+            logger.info(
+                "No chunks found. They may have been deleted: %s",
+                chunk_ids,
+            )
             return 0
 
+        if len(chunks) != len(chunk_ids):
+            existing_ids = {chunk.id for chunk in chunks}
+            missing_ids = set(chunk_ids) - existing_ids
+
+            logger.info(
+                "Some chunks no longer exist, possibly because their document "
+                "was deleted. Skipping missing chunks: %s",
+                missing_ids,
+            )
+
         texts = [chunk.content for chunk in chunks]
+
         try:
             embeddings = await self.embedding_provider.embed_documents(texts)
-            if len(embeddings) != len(chunk_ids):
+
+            if len(embeddings) != len(chunks):
                 raise ValueError(
-                    f"Expected {len(chunks)} embeddings, but got {len(embeddings)}"
+                    f"Expected {len(chunks)} embeddings, got {len(embeddings)}"
                 )
 
             for chunk, embedding in zip(chunks, embeddings):
@@ -121,8 +134,11 @@ class EmbeddingService:
         except Exception:
             logger.exception(
                 "Embedding failed for chunks %s",
-                chunk_ids,
+                [chunk.id for chunk in chunks],
             )
-            await self.repository.mark_failed(chunk_ids)
+
+            await self.repository.mark_failed(
+                [chunk.id for chunk in chunks]
+            )
             await self.session.commit()
             raise

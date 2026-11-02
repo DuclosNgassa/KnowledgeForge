@@ -172,3 +172,7 @@ class DocumentRepository:
         await self.db.flush()
 
         return document
+
+    async def delete(self, document: Document) -> None:
+        await self.db.delete(document)
+        await self.db.flush()
