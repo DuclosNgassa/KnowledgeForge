@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import select, func, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.ingestion.models.embedding_status import EmbeddingStatus
+from app.models.enums import EmbeddingStatus
 from app.models import DocumentChunk, Document
 from sqlalchemy.orm import selectinload
 
@@ -21,6 +21,21 @@ class DocumentChunkRepository:
         await self.session.flush()
 
         return chunks
+
+    async def find_chunks_by_document_id(
+            self,
+            document_id: UUID,
+    ) -> list[DocumentChunk]:
+
+        stmt = (
+            select(DocumentChunk)
+            .where(DocumentChunk.document_id == document_id)
+            .order_by(DocumentChunk.chunk_index.asc())
+        )
+
+        result = await self.session.execute(stmt)
+
+        return list(result.scalars().all())
 
     async def find_pending_chunks(self,
                                   document_id: UUID | None = None,

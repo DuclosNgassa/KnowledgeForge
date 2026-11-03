@@ -92,6 +92,7 @@ async def embed_document(
 
     return total_embedded
 
+
 def get_google_embedding_provider(model: str = settings.google_embedding_model) -> EmbeddingProvider:
     return GoogleEmbeddingProvider(
         model=model,

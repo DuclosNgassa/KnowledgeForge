@@ -2,7 +2,7 @@ import math
 from uuid import UUID
 
 from app.core.exceptions.exceptions import NotFoundException
-from app.ingestion.models.document_status import DocumentStatus
+from app.models.enums import DocumentStatus
 from app.models import Document
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.knowledge_base_repository import KnowledgeBaseRepository

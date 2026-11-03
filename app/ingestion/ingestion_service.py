@@ -5,8 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ingestion.chunker.document_chunker import DocumentChunkService
 from app.ingestion.loaders.loader import DocumentLoader
-from app.ingestion.models.document_status import DocumentStatus
-from app.ingestion.models.embedding_status import EmbeddingStatus
+from app.models.enums import DocumentStatus, EmbeddingStatus
 from app.models import Document, DocumentChunk
 from app.observability.logging import logger
 from app.schemas.document_chunk import DocumentChunkData

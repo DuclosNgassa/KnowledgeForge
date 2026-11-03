@@ -1,6 +1,6 @@
 from langchain_community.document_loaders import WebBaseLoader
 
-from app.ingestion.models.document_type import DocumentType
+from app.models.enums import DocumentType
 from app.ingestion.models.loaded_document import LoadedDocument
 
 

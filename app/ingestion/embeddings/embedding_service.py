@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.ingestion.embeddings.embedding_provider import EmbeddingProvider
-from app.ingestion.models.embedding_status import EmbeddingStatus
+from app.models.enums import EmbeddingStatus
 from app.observability.logging import logger
 from app.repositories.document_chunk_repository import DocumentChunkRepository
 

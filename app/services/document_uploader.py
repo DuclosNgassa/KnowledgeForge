@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 from fastapi import UploadFile
 from app.ingestion.loaders.loader import DocumentLoader
-from app.ingestion.models.document_status import DocumentStatus
+from app.models.enums import DocumentStatus
 from app.ingestion.models.loaded_document import LoadedDocument
 from app.models import Document
 

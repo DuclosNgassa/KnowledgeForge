@@ -8,7 +8,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.schema import ForeignKey
 
 from app.core.db.database import Base
-from app.ingestion.models.document_status import DocumentStatus
+from app.models.enums import DocumentStatus
 
 
 class Document(Base):
@@ -81,4 +81,12 @@ class Document(Base):
         "DocumentChunk",
         back_populates="document",
         cascade="all,delete-orphan",
+    )
+
+    summary: Mapped["DocumentSummary | None"] = relationship(
+        "DocumentSummary",
+        back_populates="document",
+        cascade="all,delete-orphan",
+        uselist=False,
+        passive_deletes=True,
     )

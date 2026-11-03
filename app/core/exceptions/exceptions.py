@@ -10,6 +10,9 @@ class PermanentEmbeddingError(EmbeddingError):
     """Embedding failed permanently and should not be retried."""
 
 
+class TransientSummaryError(Exception):
+    """Summarization failed temporarily and can be retried."""
+
 class AppException(Exception):
     """App exception."""
     status_code = 500

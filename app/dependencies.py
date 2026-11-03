@@ -18,12 +18,14 @@ from app.repositories.chat_message_repository import ChatMessageRepository
 from app.repositories.chat_session_repository import ChatSessionRepository
 from app.repositories.document_chunk_repository import DocumentChunkRepository
 from app.repositories.document_repository import DocumentRepository
+from app.repositories.document_summary_repository import DocumentSummaryRepository
 from app.repositories.knowledge_base_repository import KnowledgeBaseRepository
 from app.repositories.user_repository import UserRepository
 from app.services.agent_service import AgentService
 from app.services.chat_message_service import ChatMessageService
 from app.services.chat_session_service import ChatSessionService
 from app.services.document_service import DocumentService
+from app.services.document_summary_service import DocumentSummaryService
 from app.services.document_uploader import DocumentUploader
 from app.ingestion.embeddings.embedding_service import EmbeddingService
 from app.services.knowledge_base_service import KnowledgeBaseService
@@ -64,6 +66,19 @@ def get_document_service(
     document_repository = DocumentRepository(db)
     knowledge_base_repository = KnowledgeBaseRepository(db)
     return DocumentService(document_repository, knowledge_base_repository)
+
+
+def get_document_summary_service(
+        db: Annotated[AsyncSession, Depends(get_db)],
+) -> DocumentSummaryService:
+    document_repo = DocumentRepository(db)
+    document_summary_repo = DocumentSummaryRepository(db)
+
+    return DocumentSummaryService(
+        document_repository=document_repo,
+        document_summary_repository=document_summary_repo,
+    )
+
 
 def get_ingestion_service(
         db: Annotated[AsyncSession, Depends(get_db)],
