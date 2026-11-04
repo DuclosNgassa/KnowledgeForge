@@ -1,4 +1,4 @@
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from app.core.exceptions.exceptions import NotFoundException
 from app.models import DocumentSummary
@@ -31,12 +31,18 @@ class DocumentSummaryService:
         # Check whether a summary already exists
         summary = await self.document_summary_repository.find_by_document_id(document_id=document_id)
 
+        generation_id = uuid4()
+
         if summary is None:
-            summary = await self.document_summary_repository.create(document_id)
+            summary = await self.document_summary_repository.create(
+                document_id=document_id,
+                generation_id=generation_id,
+            )
+
             return summary, dispatch_background_task
 
         elif regenerate:
-            summary = await self.document_summary_repository.set_pending(summary)
+            summary = await self.document_summary_repository.set_pending(summary, generation_id)
             return summary, dispatch_background_task
 
         dispatch_background_task = False

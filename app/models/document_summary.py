@@ -63,3 +63,8 @@ class DocumentSummary(Base):
     document: Mapped["Document"] = relationship(
         back_populates="summary",
     )
+
+    generation_id: Mapped[UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        nullable=True,
+    )

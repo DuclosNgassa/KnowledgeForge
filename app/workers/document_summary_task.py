@@ -28,21 +28,29 @@ document_summarization_agent = (
 )
 async def generate_document_summary(
         document_id_str: str,
+        generation_id_str: str,
 ):
     """
-    uv run taskiq worker --app-dir . --workers 1 app.workers.worker:broker app.workers.document_summary_task.generate_document_summary
+    Generate or regenerate a document summary asynchronously.
+
+    The generation_id ensures that an outdated worker cannot
+    overwrite a newer summary generation.
     """
+
     document_id = UUID(document_id_str)
+    generation_id = UUID(generation_id_str)
 
     logger.info(
-        "Starting summary generation for document %s",
+        "Starting summary generation. "
+        "[document_id=%s, generation_id=%s]",
         document_id,
+        generation_id,
     )
 
-    # ==========================================
-    # Transaction 1: Validate and claim summary
+    # ==========================================================
+    # Transaction 1: Validate document and claim generation
     # PENDING / FAILED -> PROCESSING
-    # ==========================================
+    # ==========================================================
 
     async with AsyncSessionLocal() as session:
         document_repository = DocumentRepository(session)
@@ -57,22 +65,33 @@ async def generate_document_summary(
 
         if document is None:
             logger.warning(
-                f"Document does not exist. Skipping summary. [document_id={document_id}]",
+                "Document does not exist. Skipping summary generation. "
+                "[document_id=%s]",
+                document_id,
             )
             return
 
         if document.status != DocumentStatus.READY:
-            raise ValueError(
-                f"Document is not ready for summarization. [document_id={document_id}]"
+            logger.error(
+                "Document is not ready for summarization. "
+                "[document_id=%s, status=%s]",
+                document_id,
+                document.status,
             )
+            return
 
+        # Atomically claim only the requested generation.
         summary = await summary_repository.claim_for_processing(
             document_id=document_id,
+            generation_id=generation_id,
         )
 
         if summary is None:
             logger.info(
-                f"Summary for document %s is already processed or completed. Skipping. [document_id={document_id}]",
+                "Generation is no longer pending or was already claimed. "
+                "Skipping. [document_id=%s, generation_id=%s]",
+                document_id,
+                generation_id,
             )
             return
 
@@ -81,90 +100,103 @@ async def generate_document_summary(
         )
 
         if not chunks:
-            raise ValueError(
-                f"Document has no chunks to summarize. [document_id={document_id}]"
+            error_message = "Document has no chunks to summarize."
+            logger.error(
+                f"{error_message}. [document_id={document_id}, generation_id={generation_id}]",
             )
+            await summary_repository.set_failed(
+                document_id=document_id,
+                generation_id=generation_id,
+                error_message=error_message,
+            )
+            await session.commit()
+            return
 
-        # Commit the PROCESSING status before calling OpenAI.
+        # Commit PROCESSING before calling OpenAI.
+        logger.info("Commit PROCESSING before calling OpenAI")
         await session.commit()
 
-    # ==========================================
+    # ==========================================================
     # Phase 2: Generate summary
     # No database session is held here.
-    # ==========================================
+    # ==========================================================
 
     try:
         content = await document_summarization_agent.summarize(
             chunks=chunks,
         )
 
-        if not content.strip():
+        if not content or not content.strip():
             raise ValueError(
-                "The summarization agent returned an empty summary"
+                "The summarization agent returned an empty summary."
             )
 
     except Exception as exc:
         logger.exception(
-            "Summary generation failed for document %s",
+            "Summary generation failed. "
+            "[document_id=%s, generation_id=%s]",
             document_id,
+            generation_id,
         )
 
-        # ==========================================
-        # Transaction 3: Mark summary as FAILED
-        # ==========================================
+        # ======================================================
+        # Transaction 2: Mark current generation as FAILED
+        # Only updates if this generation is still current.
+        # ======================================================
 
         async with AsyncSessionLocal() as session:
             summary_repository = DocumentSummaryRepository(session)
 
-            summary = await summary_repository.find_by_document_id(
+            updated = await summary_repository.set_failed(
                 document_id=document_id,
+                generation_id=generation_id,
+                error_message=str(exc)[:4000],
             )
-
-            if summary is not None:
-                await summary_repository.set_failed(
-                    document_summary=summary,
-                    error_message=str(exc)[:4000],
-                )
 
             await session.commit()
 
+            if not updated:
+                logger.warning(
+                    "Could not mark generation as FAILED because "
+                    "it is no longer current. "
+                    "[document_id=%s, generation_id=%s]",
+                    document_id,
+                    generation_id,
+                )
+        # Re-raise so Taskiq can apply its retry policy.
         raise
 
-    # ==========================================
-    # Transaction 4: Persist completed summary
+    # ==========================================================
+    # Transaction 3: Persist completed summary
     # PROCESSING -> COMPLETED
-    # ==========================================
+    # Only updates if this generation is still current.
+    # ==========================================================
 
     async with AsyncSessionLocal() as session:
         summary_repository = DocumentSummaryRepository(session)
 
-        summary = await summary_repository.find_by_document_id(
+        updated = await summary_repository.set_completed(
             document_id=document_id,
-        )
-
-        if summary is None:
-            raise ValueError(
-                f"Summary record for document {document_id} not found"
-            )
-
-        if summary.status != SummaryStatus.PROCESSING:
-            logger.warning(
-                "Summary status changed while generating document %s. "
-                "Skipping persistence.",
-                document_id,
-            )
-            return
-
-        await summary_repository.set_completed(
-            document_summary=summary,
+            generation_id=generation_id,
             content=content,
         )
 
         await session.commit()
 
+        if not updated:
+            logger.warning(
+                "Generated summary is outdated. Skipping persistence. "
+                "[document_id=%s, generation_id=%s]",
+                document_id,
+                generation_id,
+            )
+            return
+
     logger.info(
-        "Successfully generated summary for document %s",
+        "Successfully generated document summary. "
+        "[document_id=%s, generation_id=%s]",
         document_id,
+        generation_id,
     )
 
     return content

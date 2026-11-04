@@ -172,7 +172,7 @@ async def upload_from_url(
 @router.post("/{document_id}/summary")
 async def request_document_summary(
         document_id: UUID,
-        regenerate: bool,
+        regenerate: bool = False,
         db: AsyncSession = Depends(get_db),
         current_user_info: dict = Depends(get_current_user_info),
         document_summary_service: DocumentSummaryService = Depends(get_document_summary_service),
@@ -188,6 +188,7 @@ async def request_document_summary(
 
         await generate_document_summary.kiq(
             document_id_str=str(document_id),
+            generation_id_str=str(summary.generation_id)
         )
 
     return summary
