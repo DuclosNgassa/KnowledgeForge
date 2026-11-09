@@ -1,21 +1,25 @@
 from typing import Annotated, Literal
 from uuid import UUID
 
-from fastapi import APIRouter, UploadFile, File, Request, status, Query
+from fastapi import APIRouter, UploadFile, File, Request, status, Query, HTTPException
 from fastapi.params import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db.database import get_db
 from app.dependencies import get_current_user_info, get_document_uploader, get_ingestion_service, get_document_service, \
-    get_document_summary_service
+    get_document_summary_service, get_document_extraction_service
 from app.ingestion.ingestion_service import IngestionService
 from app.models.enums import DocumentStatus
+from app.observability.logging import logger
 from app.schemas.document import DocumentUrlRequest, UpdateDocumentKnowledgeBaseRequest, UpdateDocumentMetadataRequest
+from app.schemas.document_extraction import DocumentExtractionResponse
 from app.schemas.document_response import DocumentResponse, DocumentListResponse, DocumentSummaryResponse
+from app.services.document_extraction_service import DocumentExtractionService
 from app.services.document_service import DocumentService
 from app.services.document_summary_service import DocumentSummaryService
 from app.services.document_uploader import DocumentUploader, upload_and_save_document
 from app.workers.document_summary_task import generate_document_summary
+from app.workers.document_extraction_task import extract_document
 
 router = APIRouter(
     prefix="/documents",
@@ -208,6 +212,79 @@ async def get_document_summary(
     )
 
     return DocumentSummaryResponse.model_validate(document_summary)
+
+
+@router.post(
+    "/{document_id}/extraction",
+    response_model=DocumentExtractionResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def request_document_extraction(
+        document_id: UUID,
+        regenerate: bool = Query(default=False),
+        db: AsyncSession = Depends(get_db),
+        current_user: dict = Depends(get_current_user_info),
+        document_extraction_service: DocumentExtractionService = Depends(get_document_extraction_service),
+):
+    extraction, should_dispatch = await document_extraction_service.request_extraction(
+        document_id=document_id,
+        user_id=current_user["user_id"],
+        regenerate=regenerate,
+    )
+
+    if should_dispatch:
+        # Commit before dispatching so the worker can see the record.
+        await db.commit()
+
+        try:
+            await extract_document.kiq(
+                str(document_id),
+                str(extraction.generation_id),
+            )
+
+        except Exception as exc:
+            logger.exception(
+                "Failed to enqueue document extraction | "
+                "document_id=%s | generation_id=%s",
+                document_id,
+                extraction.generation_id,
+            )
+
+            await document_extraction_service.set_dispatch_failed(
+                document_id=document_id,
+                generation_id=extraction.generation_id,
+            )
+            await db.commit()
+
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Extraction could not be scheduled. Please try again.",
+            ) from exc
+
+        logger.info(
+            "Document extraction enqueued | document_id=%s | generation_id=%s",
+            document_id,
+            extraction.generation_id,
+        )
+
+    return extraction
+
+
+@router.get(
+    "/{document_id}/extraction",
+    response_model=DocumentExtractionResponse,
+)
+async def get_document_extraction(
+        document_id: UUID,
+        service: DocumentExtractionService = Depends(get_document_extraction_service),
+        current_user: dict = Depends(get_current_user_info),
+):
+    extraction = await service.get_extraction(
+        document_id=document_id,
+        user_id=current_user["user_id"],
+    )
+
+    return extraction
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)

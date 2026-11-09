@@ -1,8 +1,8 @@
 from taskiq import SmartRetryMiddleware
 from taskiq_redis import ListQueueBroker
 
-from app.core.exceptions.exceptions import TransientEmbeddingError, TransientSummaryError
 from app.core.settings import settings
+from app.workers.retry import RETRYABLE_EXCEPTIONS
 
 
 def build_redis_url() -> str:
@@ -33,7 +33,7 @@ retry_middleware = SmartRetryMiddleware(
     use_jitter=True,
     use_delay_exponent=True,
     max_delay_exponent=60,
-    types_of_exceptions=(TransientEmbeddingError, TransientSummaryError)
+    types_of_exceptions=RETRYABLE_EXCEPTIONS
 )
 
 broker = broker.with_middlewares(

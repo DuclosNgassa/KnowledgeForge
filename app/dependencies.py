@@ -17,6 +17,7 @@ from app.ingestion.loaders.loader import DocumentLoader
 from app.repositories.chat_message_repository import ChatMessageRepository
 from app.repositories.chat_session_repository import ChatSessionRepository
 from app.repositories.document_chunk_repository import DocumentChunkRepository
+from app.repositories.document_extraction_repository import DocumentExtractionRepository
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.document_summary_repository import DocumentSummaryRepository
 from app.repositories.knowledge_base_repository import KnowledgeBaseRepository
@@ -24,6 +25,7 @@ from app.repositories.user_repository import UserRepository
 from app.services.agent_service import AgentService
 from app.services.chat_message_service import ChatMessageService
 from app.services.chat_session_service import ChatSessionService
+from app.services.document_extraction_service import DocumentExtractionService
 from app.services.document_service import DocumentService
 from app.services.document_summary_service import DocumentSummaryService
 from app.services.document_uploader import DocumentUploader
@@ -189,3 +191,12 @@ def get_chat_message_service(
 ) -> ChatMessageService:
     repository = ChatMessageRepository(session)
     return ChatMessageService(repository)
+
+
+def get_document_extraction_service(
+        session: AsyncSession = Depends(get_db),
+) -> DocumentExtractionService:
+    return DocumentExtractionService(
+        document_repository=DocumentRepository(session),
+        document_extraction_repository=DocumentExtractionRepository(session),
+    )

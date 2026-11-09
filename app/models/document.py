@@ -90,3 +90,11 @@ class Document(Base):
         uselist=False,
         passive_deletes=True,
     )
+
+    extraction: Mapped["DocumentExtraction | None"] = relationship(
+        "DocumentExtraction",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        uselist=False,
+        passive_deletes=True,
+    )

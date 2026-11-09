@@ -1,11 +1,10 @@
-import logging
 from uuid import UUID
 
 from app.agents.agent_factory import (
     create_document_summarization_agent,
 )
 from app.core.db.database import AsyncSessionLocal
-from app.models.enums import DocumentStatus, SummaryStatus
+from app.models.enums import DocumentStatus
 from app.observability.logging import logger
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.document_chunk_repository import (
