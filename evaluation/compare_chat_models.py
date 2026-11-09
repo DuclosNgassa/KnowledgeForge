@@ -14,12 +14,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env")
 # print("DATABASE_URL configured:", bool(os.getenv("DATABASE_URL")))
 # print("OPENAI_API_KEY configured:", bool(os.getenv("OPENAI_API_KEY")))
-from evaluation.datasets.rag_dataset import DATASET, EvaluationSample
+from evaluation.evaluation_datasets.rag_dataset import DATASET, EvaluationSample
 import asyncio
 
 # print("asyncio.run module:", asyncio.run.__module__)
 # print("asyncio.run function:", asyncio.run)
-from evaluation.ragas.rag_quality_evaluator import RagQualityEvaluator
+from evaluation.ragas_evaluator.rag_quality_evaluator import RagQualityEvaluator
 
 # Adjust these imports to your actual project paths.
 from app.models.document_chunk import DocumentChunk

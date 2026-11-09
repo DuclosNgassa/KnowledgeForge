@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
-from evaluation.ragas.rag_quality_evaluator import RagQualityEvaluator
-from evaluation.datasets.schemas import EvaluationSample
+from evaluation.ragas_evaluator.rag_quality_evaluator import RagQualityEvaluator
+from evaluation.evaluation_datasets.schemas import EvaluationSample
 
 from app.observability.langfuse import langfuse
 from app.services.answer_generator import AnswerGenerator

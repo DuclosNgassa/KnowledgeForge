@@ -1,0 +1,1597 @@
+{
+  "total_samples": 32,
+  "evaluated_samples": 32,
+  "skipped_unanswerable_samples": 3,
+  "retrieval_metrics": {
+    "rrf": {
+      "recall_at_5": 0.721264367816092,
+      "precision_at_5": 0.296551724137931,
+      "mrr_at_20": 0.6679802955665024,
+      "hit_at_5": 0.896551724137931
+    }
+  },
+  "answer_quality_metrics": {
+    "faithfulness": 0.9595048629531389,
+    "answer_relevancy": 0.6620236287503936,
+    "abstention_correctness": null
+  },
+  "citation_quality_metrics": {
+    "total_claims": 83,
+    "supported_claims": 81,
+    "cited_claims": 80,
+    "supported_cited_claims": 80,
+    "grounded_claim_ratio": 0.9759036144578314,
+    "citation_coverage": 0.963855421686747,
+    "citation_support_rate": 1.0
+  },
+  "results": [
+    {
+      "sample_id": "eval-001",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.5,
+        "precision_at_5": 0.2,
+        "mrr_at_20": 0.5,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.6360604060024612
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "A list comprehension is a concise way to create lists in Python, consisting of brackets containing an expression followed by a for clause, and can include additional for or if clauses.",
+            "citation_ids": [
+              "D3",
+              "D9"
+            ],
+            "supported": true,
+            "explanation": "Both D3 and D9 describe the structure of a list comprehension in Python, confirming that it consists of brackets with an expression followed by a for clause and can include additional clauses."
+          }
+        ],
+        "total_claims": 1,
+        "supported_claims": 1,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-002",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.2,
+        "mrr_at_20": 0.25,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.9265252083882864
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Tuples are immutable, meaning their contents cannot be changed once created.",
+            "citation_ids": [
+              "D1",
+              "D3",
+              "D4"
+            ],
+            "supported": true,
+            "explanation": "The evidence states that tuples are immutable and cannot have their contents changed once created."
+          },
+          {
+            "claim": "Lists are mutable, allowing for modifications such as adding, removing, or changing elements.",
+            "citation_ids": [
+              "D3",
+              "D4"
+            ],
+            "supported": true,
+            "explanation": "The evidence confirms that lists are mutable and can be modified."
+          },
+          {
+            "claim": "Tuples are often used to store heterogeneous data (different data types), while lists typically contain homogeneous data (similar data types).",
+            "citation_ids": [
+              "D3"
+            ],
+            "supported": true,
+            "explanation": "The evidence supports that tuples usually contain heterogeneous data and lists typically contain homogeneous data."
+          },
+          {
+            "claim": "Tuples are defined using commas, and a single item tuple requires a trailing comma (e.g., `('hello',)`).",
+            "citation_ids": [
+              "D3",
+              "D12"
+            ],
+            "supported": true,
+            "explanation": "The evidence explains how tuples are defined and the requirement for a trailing comma in single item tuples."
+          },
+          {
+            "claim": "An empty tuple is created with a pair of parentheses `()`.",
+            "citation_ids": [
+              "D3",
+              "D12"
+            ],
+            "supported": true,
+            "explanation": "The evidence states that an empty tuple can be created using a pair of parentheses."
+          },
+          {
+            "claim": "Lists are defined using square brackets (e.g., `[1, 2, 3]`).",
+            "citation_ids": [
+              "D7"
+            ],
+            "supported": true,
+            "explanation": "The evidence confirms that lists are defined using square brackets."
+          }
+        ],
+        "total_claims": 6,
+        "supported_claims": 6,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-003",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.3333333333333333,
+        "precision_at_5": 0.2,
+        "mrr_at_20": 0.25,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.9999995803715663
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "An exception is raised when a runtime error occurs or can be explicitly raised using the `raise` statement.",
+            "citation_ids": [
+              "D1",
+              "D13"
+            ],
+            "supported": true,
+            "explanation": "The evidence states that the Python interpreter raises an exception when it detects a runtime error and that a Python program can explicitly raise an exception with the raise statement."
+          },
+          {
+            "claim": "Code that may cause an exception is placed in a `try` block.",
+            "citation_ids": [
+              "D14"
+            ],
+            "supported": true,
+            "explanation": "The evidence explains that the try clause is executed and if an exception occurs, the rest of the clause is skipped."
+          },
+          {
+            "claim": "If an exception occurs, the code execution skips the rest of the `try` block and moves to the corresponding `except` clause that matches the exception type.",
+            "citation_ids": [
+              "D14"
+            ],
+            "supported": true,
+            "explanation": "The evidence confirms that if an exception occurs during execution of the try clause, the rest of the clause is skipped and the corresponding except clause is executed."
+          },
+          {
+            "claim": "A `try` statement can have multiple `except` clauses to handle different types of exceptions.",
+            "citation_ids": [
+              "D14"
+            ],
+            "supported": true,
+            "explanation": "The evidence states that a try statement may have more than one except clause to specify handlers for different exceptions."
+          },
+          {
+            "claim": "An optional `else` clause can be included to execute code if the `try` block does not raise an exception.",
+            "citation_ids": [
+              "D16"
+            ],
+            "supported": true,
+            "explanation": "The evidence indicates that the optional else clause is executed if control flows off the end of the try clause."
+          },
+          {
+            "claim": "A `finally` clause can be used to specify a block of code that runs regardless of whether an exception occurred or was handled.",
+            "citation_ids": [
+              "D16"
+            ],
+            "supported": true,
+            "explanation": "The evidence states that the finally clause can be used to specify cleanup code that is executed whether an exception occurred or not."
+          },
+          {
+            "claim": "If no `except` clause matches the raised exception, it is considered unhandled, and the program raises a traceback showing where the error occurred and stops execution.",
+            "citation_ids": [
+              "D1",
+              "D6"
+            ],
+            "supported": true,
+            "explanation": "The evidence explains that if an exception is not handled, the interpreter terminates execution and prints a stack backtrace."
+          },
+          {
+            "claim": "When a new exception is raised inside an exception handler, the original exception becomes the context of the new one, facilitating debugging.",
+            "citation_ids": [
+              "D12"
+            ],
+            "supported": true,
+            "explanation": "The evidence describes how the previous exception is attached as the context of the new exception when raised inside an exception handler."
+          },
+          {
+            "claim": "Details about the raised exception, such as its type and value, can be accessed via the `sys.exc_info()` function.",
+            "citation_ids": [
+              "D7"
+            ],
+            "supported": true,
+            "explanation": "The evidence states that sys.exc_info() returns a tuple containing the exception class, instance, and traceback object."
+          }
+        ],
+        "total_claims": 9,
+        "supported_claims": 9,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-004",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.2,
+        "mrr_at_20": 0.5,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8914760454481551
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "The purpose of `__init__.py` is to define a package in Python.",
+            "citation_ids": [
+              "D12"
+            ],
+            "supported": true,
+            "explanation": "The source D12 states that a regular package is typically implemented as a directory containing an `__init__.py` file, which is executed when the package is imported, thus defining the package."
+          },
+          {
+            "claim": "When a package is imported, the code in its `__init__.py` file is implicitly executed, and the objects it defines are bound to names in the package's namespace.",
+            "citation_ids": [
+              "D12"
+            ],
+            "supported": true,
+            "explanation": "Source D12 confirms that when a regular package is imported, the `__init__.py` file is executed and the objects defined within it are bound to the package's namespace."
+          },
+          {
+            "claim": "This file can contain any Python code, and it is typically used to initialize the package and its submodules.",
+            "citation_ids": [
+              "D12"
+            ],
+            "supported": true,
+            "explanation": "The source D12 indicates that the `__init__.py` file can contain any Python code and is used to initialize the package."
+          }
+        ],
+        "total_claims": 3,
+        "supported_claims": 3,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-005",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7212891405117864
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "The with statement in Python is used to wrap the execution of a block of code with methods defined by a context manager.",
+            "citation_ids": [
+              "D6"
+            ],
+            "supported": true,
+            "explanation": "The source D6 states that the with statement is used to wrap the execution of a block with methods defined by a context manager."
+          },
+          {
+            "claim": "The context expression (in the with_item) is evaluated to obtain a context manager.",
+            "citation_ids": [
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "Source D1 describes that the context expression in the with_item is evaluated to obtain a context manager."
+          },
+          {
+            "claim": "The context manager\u2019s __exit__() method is invoked after the suite finishes executing.",
+            "citation_ids": [
+              "D19"
+            ],
+            "supported": true,
+            "explanation": "Source D19 confirms that the context manager's __exit__() method is invoked after the suite finishes executing."
+          },
+          {
+            "claim": "If an exception caused the suite to be exited, its type, value, and traceback are passed to __exit__().",
+            "citation_ids": [
+              "D19"
+            ],
+            "supported": true,
+            "explanation": "Source D19 states that if an exception caused the suite to be exited, its type, value, and traceback are passed to __exit__()."
+          },
+          {
+            "claim": "If the suite was exited normally, None is passed as arguments to __exit__().",
+            "citation_ids": [
+              "D19"
+            ],
+            "supported": true,
+            "explanation": "Source D19 indicates that if the suite was exited normally, None is passed as arguments to __exit__()."
+          },
+          {
+            "claim": "The with statement guarantees that __exit__() will always be called, thus ensuring that necessary cleanup is performed, even if an error occurs during the suite's execution.",
+            "citation_ids": [
+              "D2"
+            ],
+            "supported": true,
+            "explanation": "Source D2 confirms that the with statement guarantees that __exit__() will always be called, ensuring necessary cleanup."
+          },
+          {
+            "claim": "If an error occurs during the assignment to the target list, it will be treated the same as an error occurring within the suite would be.",
+            "citation_ids": [
+              "D2"
+            ],
+            "supported": true,
+            "explanation": "Source D2 explains that if an error occurs during the assignment to the target list, it will be treated the same as an error occurring within the suite."
+          },
+          {
+            "claim": "The context manager\u2019s __enter__() method is called, and if a target is included in the with statement, its return value is assigned to the target.",
+            "citation_ids": [
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "Source D1 states that the context manager's __enter__() method is called, and if a target is included, its return value is assigned to it."
+          },
+          {
+            "claim": "The suite (the block of code intended to execute) is executed after the context manager\u2019s __enter__() method is called.",
+            "citation_ids": [
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "Source D1 confirms that the suite is executed after the context manager's __enter__() method is called."
+          }
+        ],
+        "total_claims": 9,
+        "supported_claims": 9,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-006",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8425082078792339
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Broken Access Control refers to failures in enforcing policies that restrict users from acting outside their intended permissions, potentially leading to unauthorized information disclosure, modification, or destruction of data, as well as users performing actions beyond their authorized limits.",
+            "citation_ids": [
+              "D1",
+              "D3"
+            ],
+            "supported": true,
+            "explanation": "The definition of Broken Access Control and its implications are directly supported by the content in sources D1 and D3."
+          },
+          {
+            "claim": "Common vulnerabilities include violations of the principle of least privilege, bypassing access control checks through various means, and insecure direct object references that allow users to view or edit someone else's account.",
+            "citation_ids": [
+              "D1",
+              "D3"
+            ],
+            "supported": true,
+            "explanation": "The listed common vulnerabilities are explicitly mentioned in both D1 and D3."
+          },
+          {
+            "claim": "100% of the applications tested were found to have some form of broken access control, making it a critical risk area in web application security.",
+            "citation_ids": [
+              "D3"
+            ],
+            "supported": true,
+            "explanation": "This statistic is directly stated in source D3, confirming the claim."
+          }
+        ],
+        "total_claims": 3,
+        "supported_claims": 3,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-008",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.9912975903343187
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "SQL Injection occurs when untrusted data is used in SQL queries, allowing attackers to alter the commands executed on the database.",
+            "citation_ids": [
+              "D1",
+              "D10"
+            ],
+            "supported": true,
+            "explanation": "The evidence describes SQL Injection as a situation where untrusted data is used in SQL queries, which aligns with the claim."
+          },
+          {
+            "claim": "Cross-site Scripting (XSS) allows attackers to execute scripts in the context of a user's browser by injecting malicious JavaScript into webpages.",
+            "citation_ids": [
+              "D2"
+            ],
+            "supported": true,
+            "explanation": "The evidence supports the claim by stating that XSS involves executing scripts in the user's browser context."
+          },
+          {
+            "claim": "OS Command Injection allows attackers to execute arbitrary commands on the server if user input is passed unsanitized to command execution functions.",
+            "citation_ids": [
+              "D10"
+            ],
+            "supported": true,
+            "explanation": "The evidence explains that OS Command Injection can lead to arbitrary command execution on the server, supporting the claim."
+          },
+          {
+            "claim": "LDAP Injection involves manipulating LDAP queries to obtain unauthorized access to records.",
+            "citation_ids": [
+              "D5"
+            ],
+            "supported": true,
+            "explanation": "The evidence states that LDAP Injection is about manipulating LDAP queries for unauthorized access, which supports the claim."
+          },
+          {
+            "claim": "XML Injection occurs when attackers manipulate XML data inputs to alter the structure of an XML document, potentially allowing unauthorized access or data leakage.",
+            "citation_ids": [
+              "D5"
+            ],
+            "supported": true,
+            "explanation": "The evidence describes XML Injection as manipulating XML data inputs, which aligns with the claim."
+          },
+          {
+            "claim": "Code Injection involves injecting executable code into an application that will be run by the server or client, allowing for potential remote code execution.",
+            "citation_ids": [
+              "D5"
+            ],
+            "supported": true,
+            "explanation": "The evidence supports the claim by stating that Code Injection allows for the execution of injected code."
+          }
+        ],
+        "total_claims": 6,
+        "supported_claims": 6,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-009",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.2,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.8205416181472441
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "The OWASP category that covers cryptographic failures is A04:2025 - Cryptographic Failures, which falls to #4 in the ranking for 2025.",
+            "citation_ids": [
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "The source evidence states that A04:2025 - Cryptographic Failures is indeed ranked #4 in the OWASP Top 10 for 2025."
+          }
+        ],
+        "total_claims": 1,
+        "supported_claims": 1,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-010",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7359084506610417
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Security misconfiguration can be prevented by implementing secure installation processes, establishing a repeatable hardening process, and removing unnecessary features and components from the application.",
+            "citation_ids": [
+              "D2",
+              "D4",
+              "D6"
+            ],
+            "supported": true,
+            "explanation": "The evidence supports the claim by stating that secure installation processes and a repeatable hardening process are essential for preventing security misconfiguration, as well as the removal of unnecessary features."
+          },
+          {
+            "claim": "Central configuration for intercepting excessive error messages and conducting regular reviews and updates of security settings are essential.",
+            "citation_ids": [
+              "D2",
+              "D4",
+              "D6"
+            ],
+            "supported": true,
+            "explanation": "The evidence explicitly mentions the need for a central configuration to intercept excessive error messages and emphasizes the importance of regular reviews and updates of security settings."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-011",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.5,
+        "precision_at_5": 0.2,
+        "mrr_at_20": 0.3333333333333333,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.404492729380809
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Authentication can be implemented using OAuth2, specifically the `password` flow, where a user provides a username and password that the backend API validates to issue a token for further authenticated requests.",
+            "citation_ids": [
+              "D6",
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "The evidence from D6 states that the `password` flow is a way defined in OAuth2 to handle security and authentication, and D1 discusses OAuth2 and its use for authentication."
+          },
+          {
+            "claim": "FastAPI provides tools to simplify the process of adding security mechanisms for this purpose.",
+            "citation_ids": [
+              "D13"
+            ],
+            "supported": true,
+            "explanation": "D13 explicitly states that FastAPI provides several tools to help deal with security easily and rapidly."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-012",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": false,
+      "rrf": null,
+      "rag_score": {
+        "abstention_correctness": 1.0
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "There is no information regarding blockchain wallet security in the provided documents.",
+            "citation_ids": [],
+            "supported": false,
+            "explanation": "The supplied evidence does not contain any information about blockchain wallet security, thus the claim is unsupported."
+          }
+        ],
+        "total_claims": 1,
+        "supported_claims": 0,
+        "unsupported_claims": 1,
+        "uncited_claims": 1,
+        "grounded_claim_ratio": 0.0,
+        "citation_coverage": 0.0,
+        "citation_support_rate": null,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-013",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.2,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.6141349970915291
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "The purpose of VACUUM in PostgreSQL is to optimize disk space by cleaning up old data that may not be immediately removed during UPDATE or DELETE commands.",
+            "citation_ids": [
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "The source evidence [D1] states that VACUUM is used to clean up disk space and remove old data that may not be immediately deleted during UPDATE or DELETE commands, directly supporting the claim."
+          }
+        ],
+        "total_claims": 1,
+        "supported_claims": 1,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-014",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.5,
+        "precision_at_5": 0.2,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7855173861104485
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "VACUUM cleans up the disk space used by old data without requiring a complete rewrite of the table.",
+            "citation_ids": [
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "The source states that the VACUUM command is used to clean up disk space without rewriting the entire table."
+          },
+          {
+            "claim": "VACUUM FULL reclaims space by rewriting the entire table and is necessary when most entries in a table have been deleted.",
+            "citation_ids": [
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "The source confirms that VACUUM FULL is needed when most entries in a table have been deleted and it reclaims space by rewriting the entire table."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-015",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.0,
+        "precision_at_5": 0.0,
+        "mrr_at_20": 0.1,
+        "hit_at_5": 0.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.6324974289251585
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "PostgreSQL allows the creation of foreign keys to maintain referential integrity between tables, which can reference single or multiple columns.",
+            "citation_ids": [
+              "D4",
+              "D19"
+            ],
+            "supported": true,
+            "explanation": "Both D4 and D19 discuss foreign keys in PostgreSQL, confirming that they maintain referential integrity and can reference single or multiple columns."
+          },
+          {
+            "claim": "Actions on foreign keys, such as ON DELETE CASCADE or ON UPDATE, can be specified to define the behavior when the referenced data changes or is deleted.",
+            "citation_ids": [
+              "D19"
+            ],
+            "supported": true,
+            "explanation": "D19 explicitly mentions the actions ON DELETE CASCADE and ON UPDATE in relation to foreign keys, confirming that these actions can be specified."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-017",
+      "question_type": "factual",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.5,
+        "precision_at_5": 0.2,
+        "mrr_at_20": 0.2,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.6072826864635145
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "An index can be created using the command `CREATE INDEX indexname ON tablename (columnname);` for a single column, or multiple columns can be specified separated by commas.",
+            "citation_ids": [
+              "D1",
+              "D3"
+            ],
+            "supported": true,
+            "explanation": "The evidence supports the claim by providing the syntax for creating indexes on single or multiple columns."
+          },
+          {
+            "claim": "Indexes can be created concurrently on partitions using `CREATE INDEX CONCURRENTLY` followed by attaching them to the parent index with `ALTER INDEX ... ATTACH PARTITION`.",
+            "citation_ids": [
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "The evidence confirms that indexes can be created concurrently on partitions and attached to the parent index."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-018",
+      "question_type": "factual",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.0,
+        "precision_at_5": 0.0,
+        "mrr_at_20": 0.0,
+        "hit_at_5": 0.0
+      },
+      "rag_score": {
+        "faithfulness": 0.5,
+        "answer_relevancy": 0.6072826864635145
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "An index can be created using the command `CREATE INDEX [Indexname] ON [Table] ([Field])`",
+            "citation_ids": [
+              "D3"
+            ],
+            "supported": true,
+            "explanation": "The source [D3] states that an index can be created using the command `Create unique|distinct index [Indexname] on [Tabelle] (Feld,.. )`, which supports the claim."
+          },
+          {
+            "claim": "Indexes can be created uniquely or distinctly across multiple fields",
+            "citation_ids": [
+              "D3"
+            ],
+            "supported": true,
+            "explanation": "The source [D3] mentions that the index can be unique or distinct and can span multiple fields, directly supporting the claim."
+          },
+          {
+            "claim": "Indexes can be created concurrently on partitioned tables and attached to a parent index using `ALTER INDEX ... ATTACH PARTITION`",
+            "citation_ids": [
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "Source [D1] explains that indexes can be created on each partition using CONCURRENTLY and attached to the parent index, which supports the claim."
+          }
+        ],
+        "total_claims": 3,
+        "supported_claims": 3,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-020",
+      "question_type": "factual",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.800828469135614
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Dependency injection in FastAPI is a system that allows code to declare its required dependencies, which FastAPI then provides automatically when executing path operation functions.",
+            "citation_ids": [
+              "D1",
+              "D2"
+            ],
+            "supported": true,
+            "explanation": "Both D1 and D2 describe FastAPI's dependency injection system, stating that it allows code to declare dependencies and that FastAPI automatically provides these dependencies when executing path operation functions."
+          },
+          {
+            "claim": "This system simplifies the integration of components, promotes code reuse, and minimizes code repetition.",
+            "citation_ids": [
+              "D2"
+            ],
+            "supported": true,
+            "explanation": "D2 explicitly states that the dependency injection system is useful for minimizing code repetition and allows for shared logic, which supports the claim about simplifying integration and promoting code reuse."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-021",
+      "question_type": "factual",
+      "difficulty": "easy",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 0.3333333333333333,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7116231563093697
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Authentication in FastAPI can be implemented using OAuth2 with the Password flow.",
+            "citation_ids": [
+              "D1",
+              "D2",
+              "D10"
+            ],
+            "supported": true,
+            "explanation": "The sources confirm that FastAPI supports OAuth2 with the Password flow for authentication."
+          },
+          {
+            "claim": "FastAPI provides various tools in the fastapi.security module to simplify the process and enable integration with interactive documentation.",
+            "citation_ids": [
+              "D1",
+              "D2",
+              "D10"
+            ],
+            "supported": true,
+            "explanation": "The sources state that FastAPI includes tools in the fastapi.security module to facilitate security implementations and integrate with documentation."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-022",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.6666666666666666,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 0.5,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.529856542953334
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "`BackgroundTasks` is used in FastAPI to define background tasks that can be run after returning a response, allowing operations like sending email notifications or processing data without making the client wait for the task to complete.",
+            "citation_ids": [
+              "D2",
+              "D5"
+            ],
+            "supported": true,
+            "explanation": "The evidence states that `BackgroundTasks` can be used to perform operations like sending email notifications and processing data after returning a response, which directly supports the claim."
+          }
+        ],
+        "total_claims": 1,
+        "supported_claims": 1,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-022",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 0.5,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 0.6923076923076923,
+        "answer_relevancy": 0.6718838031717126
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Aetheria Technologies categorizes employees into regular full-time, regular part-time, temporary, seasonal, and remote employees.",
+            "citation_ids": [
+              "D4"
+            ],
+            "supported": true,
+            "explanation": "The claim is directly supported by the content in source D4, which states that the handbook applies to all these categories of employees."
+          },
+          {
+            "claim": "Exempt employees are those in executive, administrative, professional, or specialized roles meeting salary threshold tests and are ineligible for overtime, while non-exempt employees do not meet these criteria and are eligible for overtime pay.",
+            "citation_ids": [
+              "D2"
+            ],
+            "supported": true,
+            "explanation": "The claim is directly supported by the content in source D2, which outlines the definitions of exempt and non-exempt employees along with their overtime eligibility."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-023",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.6,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.41303328762973557
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Aetheria Technologies supports a hybrid workplace model with options for office-centric, hybrid, and fully remote work.",
+            "citation_ids": [
+              "D2"
+            ],
+            "supported": true,
+            "explanation": "The evidence in D2 explicitly states that Aetheria Technologies supports a dynamic hybrid workplace model structured around three primary work arrangements: office-centric, hybrid, and fully remote."
+          },
+          {
+            "claim": "For home office setups, the company provides a one-time stipend of $1,000 for ergonomic equipment and a monthly technology allowance of $75 for internet connectivity expenses.",
+            "citation_ids": [
+              "D3"
+            ],
+            "supported": true,
+            "explanation": "D3 confirms that Aetheria provides a one-time tax-free stipend of $1,000 for ergonomic home office setups and a monthly stipend of $75 for internet connectivity expenses."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-024",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.3333333333333333,
+        "precision_at_5": 0.2,
+        "mrr_at_20": 0.5,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.3518933261818871
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Aetheria Technologies supports a hybrid workplace model with arrangements for office-centric, hybrid (2-3 days remote), and fully remote work from approved locations.",
+            "citation_ids": [
+              "D2"
+            ],
+            "supported": true,
+            "explanation": "The claim is directly supported by the content in source D2, which outlines the hybrid workplace model and the specific arrangements."
+          },
+          {
+            "claim": "The company provides a one-time ergonomic home office setup stipend of $1,000 and a monthly technology allowance of $75 for remote and hybrid employees.",
+            "citation_ids": [
+              "D3"
+            ],
+            "supported": true,
+            "explanation": "The claim is directly supported by the content in source D3, which details the stipend and allowance provided to remote and hybrid employees."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-025",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.6666666666666666,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.5515640925970297
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "The company conducts performance reviews bi-annually, utilizing a framework that includes a mid-year check-in and an end-of-year comprehensive evaluation with a formal 5-point performance rating.",
+            "citation_ids": [
+              "D1",
+              "D5",
+              "D7"
+            ],
+            "supported": true,
+            "explanation": "The evidence confirms that Aetheria operates on a bi-annual performance review framework that includes a mid-year check-in and an end-of-year review with a formal 5-point performance rating."
+          },
+          {
+            "claim": "Promotions and merit increases are determined based on performance ratings, with specific percentage ranges for merit increases tied to the final rating received during the end-of-year review process.",
+            "citation_ids": [
+              "D7"
+            ],
+            "supported": true,
+            "explanation": "The evidence states that merit increases are tied to performance ratings evaluated during the end-of-year review process, and it provides specific percentage ranges for merit increases based on performance ratings."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-026",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.75,
+        "precision_at_5": 0.6,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.7227412254081592
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "PTO must be requested at least two weeks in advance for three or more consecutive days.",
+            "citation_ids": [
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "The source states that requests for planned PTO of 3 or more consecutive days must be submitted at least two weeks in advance."
+          },
+          {
+            "claim": "Accruals are capped at 1.5 times the annual entitlement with a maximum of 5 unused days carried over to the next year.",
+            "citation_ids": [
+              "D2"
+            ],
+            "supported": true,
+            "explanation": "The source specifies that PTO accruals are capped at 1.5 times the annual entitlement and that a maximum of 5 unused days can be carried over to the next year."
+          },
+          {
+            "claim": "Unused PTO cannot be cashed out while employed except as mandated by local law, but will be paid out upon separation of employment.",
+            "citation_ids": [
+              "D6"
+            ],
+            "supported": true,
+            "explanation": "The source confirms that unused PTO cannot be cashed out during active employment except where mandated by local law, and it will be paid out upon separation."
+          }
+        ],
+        "total_claims": 3,
+        "supported_claims": 3,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-027",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.0,
+        "precision_at_5": 0.0,
+        "mrr_at_20": 0.07142857142857142,
+        "hit_at_5": 0.0
+      },
+      "rag_score": {
+        "faithfulness": 0.8,
+        "answer_relevancy": 0.0
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Die Nutzung von generativer KI in kreativen Prozessen unterscheidet sich darin, dass sie im Alltag oft weniger und mit weniger Kenntnissen eingesetzt wird, w\u00e4hrend in professionellen Umfeldern ein gezielterer und h\u00e4ufigerer Einsatz zu beobachten ist.",
+            "citation_ids": [
+              "D4",
+              "D11"
+            ],
+            "supported": true,
+            "explanation": "Die Quelle D4 beschreibt, dass \u00fcber die H\u00e4lfte der Probanden nur Grundkenntnisse im Umgang mit KI-Tools haben und dass viele diese Tools im Alltag selten nutzen. D11 best\u00e4tigt, dass ein Gro\u00dfteil der Teilnehmenden nur geringe Kenntnisse hat und generative KI selten oder nie einsetzt."
+          },
+          {
+            "claim": "Zur Steigerung des digitalen Bewusstseins empfiehlt der Text insbesondere Schulungsma\u00dfnahmen und praxisnahe Leitf\u00e4den, um Kompetenzen im Umgang mit generativer KI zu f\u00f6rdern und Unsicherheiten abzubauen.",
+            "citation_ids": [
+              "D3",
+              "D15"
+            ],
+            "supported": true,
+            "explanation": "D3 hebt den Bedarf an Schulungsma\u00dfnahmen zur F\u00f6rderung der Kompetenzen im Umgang mit generativer KI hervor. D15 beschreibt, dass der Leitfaden als Orientierungshilfe dienen soll, um das Potenzial von generativer KI zu f\u00f6rdern und Unsicherheiten abzubauen."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-030",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 0.8333333333333334,
+        "answer_relevancy": 0.5609653335192532
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Die fr\u00fchzeitige Einbindung von Mitarbeitenden in technologische Ver\u00e4nderungsprozesse ist entscheidend, um Unsicherheiten abzubauen, die KI-Nutzung zu verbessern und Kreativit\u00e4t zu f\u00f6rdern.",
+            "citation_ids": [
+              "D1"
+            ],
+            "supported": true,
+            "explanation": "Die Quelle D1 beschreibt, dass das Einbeziehen von Mitarbeitenden in Ver\u00e4nderungsprozesse dazu beitr\u00e4gt, Unsicherheiten abzubauen, die Nutzung von KI zu verbessern und Kreativit\u00e4t zu f\u00f6rdern."
+          },
+          {
+            "claim": "Kostenlose Schulungsangebote erm\u00f6glichen einen gerechten Zugang zu digitalen Kompetenzen und motivieren Mitarbeitende, aktiv an Ver\u00e4nderungsprozessen teilzunehmen.",
+            "citation_ids": [
+              "D4"
+            ],
+            "supported": true,
+            "explanation": "Die Quelle D4 erkl\u00e4rt, dass kostenlose Schulungsformate zur F\u00f6rderung einer fairen Teilhabe an einer zunehmend digitalisierten Gesellschaft beitragen und Mitarbeitende motivieren, an Ver\u00e4nderungsprozessen teilzunehmen."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-031",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.6888982366618439
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Der Text nennt als methodische Einschr\u00e4nkungen den potenziellen Bias durch Rekrutierung \u00fcber Social Media, die fehlende Evaluierung des Leitfadens sowie die Verwendung nicht etablierter Skalen.",
+            "citation_ids": [
+              "D1",
+              "D4"
+            ],
+            "supported": true,
+            "explanation": "Die Quellen D1 und D4 best\u00e4tigen die genannten methodischen Einschr\u00e4nkungen, einschlie\u00dflich des potenziellen Bias durch Social Media Rekrutierung, der fehlenden Evaluierung des Leitfadens und der Verwendung nicht etablierter Skalen."
+          },
+          {
+            "claim": "F\u00fcr zuk\u00fcnftige Arbeiten werden spezifischere Rekrutierungsstrategien, die Integration etablierter Skalen und die Nutzung qualitativer Interviews empfohlen, um ein detaillierteres Feedback zu erhalten.",
+            "citation_ids": [
+              "D1",
+              "D3"
+            ],
+            "supported": true,
+            "explanation": "Die Quellen D1 und D3 unterst\u00fctzen die Empfehlung f\u00fcr spezifischere Rekrutierungsstrategien, die Integration etablierter Skalen und die Nutzung qualitativer Interviews."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-032",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 1.0,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.5859258543290675
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Maschinelles Lernen (Machine Learning) ist ein Verfahren, bei dem Computer auf bestehenden Daten trainiert werden, um ein Modell zur Beschreibung dieser Daten zu entwickeln.",
+            "citation_ids": [
+              "D5"
+            ],
+            "supported": true,
+            "explanation": "The claim is directly supported by the evidence in D5, which states that machine learning involves training a computer on existing data to develop a model that describes that data."
+          }
+        ],
+        "total_claims": 1,
+        "supported_claims": 1,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-034",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.6666666666666666,
+        "precision_at_5": 0.4,
+        "mrr_at_20": 1.0,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.6584175630718683
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "K\u00fcnstliche Neuronale Netze bestehen aus einer Input-Schicht, verdeckten Schichten und einer Output-Schicht.",
+            "citation_ids": [
+              "D1",
+              "D7"
+            ],
+            "supported": true,
+            "explanation": "Die Struktur von K\u00fcnstlichen Neuronalen Netzen wird in den Quellen D1 und D7 beschrieben, wo die Input-Schicht, verdeckte Schichten und Output-Schicht erw\u00e4hnt werden."
+          },
+          {
+            "claim": "Input-Werte werden gewichtet, um Vorhersagen zu treffen.",
+            "citation_ids": [
+              "D1",
+              "D7"
+            ],
+            "supported": true,
+            "explanation": "Die Gewichtung der Input-Werte zur Ermittlung des Outputs wird in D1 und D7 erkl\u00e4rt."
+          },
+          {
+            "claim": "Sie werden mithilfe von Algorithmen wie Backpropagation trainiert, um die Verbindungen zwischen den Neuronen so anzupassen, dass die Fehler minimiert werden.",
+            "citation_ids": [
+              "D7"
+            ],
+            "supported": true,
+            "explanation": "D7 beschreibt den Backpropagation-Algorithmus und dessen Rolle bei der Anpassung der Verbindungen zur Minimierung von Fehlern."
+          }
+        ],
+        "total_claims": 3,
+        "supported_claims": 3,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-035",
+      "question_type": "multi_chunk",
+      "difficulty": "medium",
+      "answerable": true,
+      "rrf": {
+        "recall_at_5": 0.5,
+        "precision_at_5": 0.2,
+        "mrr_at_20": 0.3333333333333333,
+        "hit_at_5": 1.0
+      },
+      "rag_score": {
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.734240180613469
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Die GenAI-Weiterbildung in Deutschland wird durch die Identifikation des Bedarfs an Schulungsma\u00dfnahmen gef\u00f6rdert, um Kompetenzen im Umgang mit generativer KI zu erh\u00f6hen und Hemmschwellen abzubauen.",
+            "citation_ids": [
+              "D3"
+            ],
+            "supported": true,
+            "explanation": "Die Quelle D3 beschreibt den nachweisbaren Bedarf an Schulungsma\u00dfnahmen zur F\u00f6rderung der Kompetenzen im Umgang mit generativer KI und zur Abbau von Hemmschwellen."
+          },
+          {
+            "claim": "Die Entwicklung praxisnaher Leitf\u00e4den zielt darauf ab, Nutzenden zu helfen, die Technologie besser im kreativen Bereich einzusetzen.",
+            "citation_ids": [
+              "D10"
+            ],
+            "supported": true,
+            "explanation": "Die Quelle D10 erkl\u00e4rt, dass der Leitfaden als Orientierungshilfe dienen soll, um das Potenzial von generativer KI in kreativen Prozessen zu f\u00f6rdern und Nutzenden zu helfen, die Technologie besser einzusetzen."
+          }
+        ],
+        "total_claims": 2,
+        "supported_claims": 2,
+        "unsupported_claims": 0,
+        "uncited_claims": 0,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 1.0,
+        "citation_support_rate": 1.0,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-036",
+      "question_type": "unanswerable",
+      "difficulty": "easy",
+      "answerable": false,
+      "rrf": null,
+      "rag_score": {
+        "abstention_correctness": 1.0
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Die bereitgestellten Informationen enthalten keine Details zur F\u00f6rderung von GenAI-Weiterbildung in Kamerun.",
+            "citation_ids": [],
+            "supported": true,
+            "explanation": "Die Antwort selbst erkl\u00e4rt, dass keine Informationen zu diesem spezifischen Thema vorhanden sind, was die Aussage unterst\u00fctzt."
+          }
+        ],
+        "total_claims": 1,
+        "supported_claims": 1,
+        "unsupported_claims": 0,
+        "uncited_claims": 1,
+        "grounded_claim_ratio": 1.0,
+        "citation_coverage": 0.0,
+        "citation_support_rate": null,
+        "invalid_citations": []
+      }
+    },
+    {
+      "sample_id": "eval-037",
+      "question_type": "unanswerable",
+      "difficulty": "easy",
+      "answerable": false,
+      "rrf": null,
+      "rag_score": {
+        "abstention_correctness": 1.0
+      },
+      "grounding": {
+        "claims": [
+          {
+            "claim": "Die bereitgestellten Informationen enthalten keine Angaben zum aktuellen Bundeskanzler.",
+            "citation_ids": [],
+            "supported": false,
+            "explanation": "The claim states that the provided information does not contain details about the current Chancellor, which is not supported by any of the supplied evidence."
+          }
+        ],
+        "total_claims": 1,
+        "supported_claims": 0,
+        "unsupported_claims": 1,
+        "uncited_claims": 1,
+        "grounded_claim_ratio": 0.0,
+        "citation_coverage": 0.0,
+        "citation_support_rate": null,
+        "invalid_citations": []
+      }
+    }
+  ]
+}

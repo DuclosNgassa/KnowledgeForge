@@ -27,10 +27,10 @@ from app.core.db.database import AsyncSessionLocal
 from app.core.settings import settings
 from app.dependencies import get_openai_embedding_provider
 
-from evaluation.datasets.rag_dataset import DATASET
+from evaluation.evaluation_datasets.rag_dataset import DATASET
 
 debug_asyncio_run("after dataset import")
-from evaluation.ragas.rag_quality_evaluator import RagQualityEvaluator
+from evaluation.ragas_evaluator.rag_quality_evaluator import RagQualityEvaluator
 
 debug_asyncio_run("after rag quality evaluator import")
 
