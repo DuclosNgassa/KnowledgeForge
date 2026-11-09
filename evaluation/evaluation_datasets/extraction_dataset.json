@@ -1,0 +1,41 @@
+[
+  {
+    "id": "ext-001",
+    "document_id": "your-document-uuid",
+    "description": "Software architecture document",
+    "expected_extraction": {
+      "document_category": "Technical Documentation",
+      "key_topics": [
+        "Microservices",
+        "Event-driven architecture"
+      ],
+      "named_entities": [
+        {
+          "name": "Spring Boot",
+          "entity_type": "TECHNOLOGY",
+          "description": "Java framework for building applications"
+        },
+        {
+          "name": "Apache Kafka",
+          "entity_type": "TECHNOLOGY",
+          "description": "Distributed event streaming platform"
+        }
+      ],
+      "technologies": [
+        "Java",
+        "Spring Boot",
+        "Apache Kafka"
+      ],
+      "important_dates": [
+        {
+          "date": "2025-03-15",
+          "description": "Architecture migration completed"
+        }
+      ],
+      "key_findings": [
+        "The system uses asynchronous communication between services.",
+        "Apache Kafka is used for event distribution."
+      ]
+    }
+  }
+]

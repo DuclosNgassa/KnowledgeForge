@@ -11,5 +11,6 @@ Open a terminal in the KnowledgeForge project root—the directory containing ap
 Run:
 
 `uv run python -m evaluation.retrieval.run_retrieval_evaluation`
+`uv run python -m evaluation.extraction.run_extraction_evaluation`
 
 Using -m ensures Python can resolve the evaluation package from the project root.
