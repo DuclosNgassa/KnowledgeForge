@@ -10,6 +10,6 @@
 Open a terminal in the KnowledgeForge project root—the directory containing app/ and evaluation/.
 Run:
 
-`uv run python -m evaluation.run_retrieval_evaluation`
+`uv run python -m evaluation.retrieval.run_retrieval_evaluation`
 
 Using -m ensures Python can resolve the evaluation package from the project root.

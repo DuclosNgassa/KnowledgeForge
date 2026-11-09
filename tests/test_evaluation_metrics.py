@@ -1,4 +1,4 @@
-from evaluation.retrieval_evaluator import calculate_metrics
+from evaluation.retrieval.retrieval_evaluator import calculate_metrics
 
 
 def test_relevant_chunk_ranked_first():

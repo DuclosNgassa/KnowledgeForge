@@ -1,14 +1,10 @@
-import asyncio
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 from uuid import UUID
 
-from evaluation.rag_quality_evaluator import RagQualityEvaluator
-from evaluation.schemas import EvaluationSample
-from evaluation.metrics import expected_chunk_ids
-import time
-from cohere.errors import TooManyRequestsError
+from evaluation.ragas.rag_quality_evaluator import RagQualityEvaluator
+from evaluation.datasets.schemas import EvaluationSample
 
 from app.observability.langfuse import langfuse
 from app.services.answer_generator import AnswerGenerator
@@ -88,6 +84,15 @@ def calculate_metrics(
     )
 
 
+def expected_chunk_ids(
+        sample: EvaluationSample,
+) -> set[str]:
+    return {
+        chunk["chunk_id"]
+        for chunk in sample["relevant_chunks"]
+    }
+
+
 def _record_sample_scores(
         span,
         sample_id: str,
@@ -139,7 +144,6 @@ class RetrievalEvaluator:
 
         self.min_request_interval = min_request_interval
         self.max_retries = max_retries
-
 
     @staticmethod
     def _chunk_ids(results: list[Any]) -> list[str]:
@@ -522,7 +526,6 @@ class RetrievalEvaluator:
             )
 
         return result
-
 
     def _aggregate_grounding_metrics(
             self,

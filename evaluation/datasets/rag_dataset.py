@@ -1,4 +1,4 @@
-from evaluation.schemas import EvaluationSample
+from evaluation.datasets.schemas import EvaluationSample
 
 
 # The validation intentionally checks dataset consistency

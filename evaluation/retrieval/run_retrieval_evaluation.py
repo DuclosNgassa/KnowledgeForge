@@ -27,14 +27,14 @@ from app.core.db.database import AsyncSessionLocal
 from app.core.settings import settings
 from app.dependencies import get_openai_embedding_provider
 
-from evaluation.dataset import DATASET
+from evaluation.datasets.rag_dataset import DATASET
 
 debug_asyncio_run("after dataset import")
-from evaluation.rag_quality_evaluator import RagQualityEvaluator
+from evaluation.ragas.rag_quality_evaluator import RagQualityEvaluator
 
 debug_asyncio_run("after rag quality evaluator import")
 
-from evaluation.retrieval_evaluator import RetrievalEvaluator
+from evaluation.retrieval.retrieval_evaluator import RetrievalEvaluator
 
 debug_asyncio_run("after retrieval evaluator import")
 from app.repositories.document_chunk_repository import DocumentChunkRepository
