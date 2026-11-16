@@ -1,4 +1,4 @@
-import asyncio
+import time
 from collections.abc import Sequence
 from typing import Any
 
@@ -6,106 +6,110 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.language_models import BaseChatModel
 
 from app.models.document_chunk import DocumentChunk
+from app.observability.logging import logger
+from app.services.summarization_batch_builder import SummarizationBatchBuilder, format_chunk_sections
+from app.services.token_counter import TokenCounter
 
 
 class DocumentSummarizationAgent:
-    MAP_BATCH_CHARS = 20_000
-    REDUCE_BATCH_CHARS = 20_000
-    FINAL_INPUT_CHARS = 20_000
-    MAX_CONCURRENCY = 5
+    MAP_INPUT_TOKEN_BUDGET = 6_000
+    REDUCE_INPUT_TOKEN_BUDGET = 6_000
+    FINAL_INPUT_TOKEN_BUDGET = 6_000
 
     def __init__(self, model: BaseChatModel):
         self.model = model
-        self.semaphore = asyncio.Semaphore(self.MAX_CONCURRENCY)
 
-        self.map_chain = (
-                ChatPromptTemplate.from_messages([
-                    (
-                        "system",
-                        """
-                        You are a document analysis assistant.
-    
-                        Summarize the supplied document sections.
-    
-                        Requirements:
-                        - Identify the main topics and important ideas.
-                        - Preserve relevant facts, technical details, and conclusions.
-                        - Retain important names, dates, numbers, and terminology.
-                        - Do not introduce information that is not in the source.
-                        - Remove repetition.
-                        - Produce a concise, self-contained summary.
-                        - Preserve the original order of the sections.
-                        - Aim for no more than 150 words.
-                        """
-                    ),
-                    (
-                        "human",
-                        "Document sections:\n\n{text}",
-                    ),
-                ])
-                | self.model
+        self.token_counter = TokenCounter()
+
+        self.map_prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                """
+                You are a document analysis assistant.
+
+                Summarize the supplied document sections.
+
+                Requirements:
+                - Identify the main topics and important ideas.
+                - Preserve relevant facts, technical details, and conclusions.
+                - Retain important names, dates, numbers, and terminology.
+                - Do not introduce information that is not in the source.
+                - Remove repetition.
+                - Produce a concise, self-contained summary.
+                - Preserve the original order of the sections.
+                - Aim for no more than 150 words.
+                """
+            ),
+            (
+                "human",
+                "Document sections:\n\n{text}",
+            ),
+        ])
+
+        self.batch_builder = SummarizationBatchBuilder(
+            token_counter=self.token_counter,
+            max_input_tokens=self.MAP_INPUT_TOKEN_BUDGET,
+            prompt=self.map_prompt,
         )
 
-        self.reduce_chain = (
-                ChatPromptTemplate.from_messages([
-                    (
-                        "system",
-                        """
-                        You are an expert document summarization assistant.
-    
-                        Combine the supplied intermediate summaries into one
-                        coherent summary.
-    
-                        Requirements:
-                        - Preserve the most important facts and ideas.
-                        - Retain relevant technical details, names, dates,
-                          numbers, and conclusions.
-                        - Remove repetition and redundant information.
-                        - Preserve logical relationships between topics.
-                        - Do not introduce unsupported information.
-                        - If sources contain conflicting statements, preserve
-                          the distinction.
-                        - Aim for no more than 200 words.
-                        """
-                    ),
-                    (
-                        "human",
-                        "Intermediate summaries:\n\n{summaries}",
-                    ),
-                ])
-                | self.model
-        )
+        self.reduce_prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                """
+                You are an expert document summarization assistant.
 
-        self.final_chain = (
-                ChatPromptTemplate.from_messages([
-                    (
-                        "system",
-                        """
-                        You are an expert document summarization assistant.
-    
-                        Produce a comprehensive summary of the original document
-                        using the supplied intermediate summaries.
-    
-                        Requirements:
-                        - Write approximately 4-6 paragraphs.
-                        - Explain the document's main subject and purpose.
-                        - Cover its most important concepts, findings, and
-                          conclusions.
-                        - Preserve important technical details.
-                        - Remove repetition.
-                        - Maintain a coherent logical flow.
-                        - Do not introduce information that is not supported
-                          by the supplied summaries.
-                        - Do not mention that the text was summarized in stages.
-                        """
-                    ),
-                    (
-                        "human",
-                        "Document summaries:\n\n{summaries}",
-                    ),
-                ])
-                | self.model
-        )
+                Combine the supplied intermediate summaries into one
+                coherent summary.
+
+                Requirements:
+                - Preserve the most important facts and ideas.
+                - Retain relevant technical details, names, dates,
+                  numbers, and conclusions.
+                - Remove repetition and redundant information.
+                - Preserve logical relationships between topics.
+                - Do not introduce unsupported information.
+                - If sources contain conflicting statements, preserve
+                  the distinction.
+                - Aim for no more than 200 words.
+                """
+            ),
+            (
+                "human",
+                "Intermediate summaries:\n\n{summaries}",
+            ),
+        ])
+
+        self.reduce_chain = self.reduce_prompt | self.model
+
+        self.final_prompt = ChatPromptTemplate.from_messages([
+            (
+                "system",
+                """
+                You are an expert document summarization assistant.
+
+                Produce a comprehensive summary of the original document
+                using the supplied intermediate summaries.
+
+                Requirements:
+                - Write approximately 4-6 paragraphs.
+                - Explain the document's main subject and purpose.
+                - Cover its most important concepts, findings, and
+                  conclusions.
+                - Preserve important technical details.
+                - Remove repetition.
+                - Maintain a coherent logical flow.
+                - Do not introduce information that is not supported
+                  by the supplied summaries.
+                - Do not mention that the text was summarized in stages.
+                """
+            ),
+            (
+                "human",
+                "Document summaries:\n\n{summaries}",
+            ),
+        ])
+
+        self.final_chain = self.final_prompt | self.model
 
     async def summarize(
             self,
@@ -115,83 +119,125 @@ class DocumentSummarizationAgent:
         if not chunks:
             raise ValueError("Cannot summarize an empty document")
 
+        start_time = time.perf_counter()
+
         ordered_chunks = sorted(
             chunks,
             key=lambda chunk: chunk.chunk_index,
         )
 
-        # Step 1: Group original chunks into batches
-        chunk_batches = self._group_chunks(ordered_chunks)
-
-        # Step 2: MAP - summarize chunk batches concurrently
-        map_results = await asyncio.gather(
-            *[
-                self._invoke_map(batch)
-                for batch in chunk_batches
-            ]
+        source_tokens = sum(
+            self.token_counter.count(chunk.content)
+            for chunk in ordered_chunks
         )
 
-        # Step 3: REDUCE - recursively reduce intermediate summaries
+        # Step 1: Build token-based batches.
+        batches = self.batch_builder.build(list(ordered_chunks))
+
+        logger.info(
+            "Starting document summarization: "
+            "chunks=%d, source_tokens=%d, map_batches=%d",
+            len(ordered_chunks),
+            source_tokens,
+            len(batches),
+        )
+
+        # Step 2: MAP - sequential processing.
+        map_results = []
+
+        map_start = time.perf_counter()
+
+        for index, batch in enumerate(batches, start=1):
+            batch_start = time.perf_counter()
+
+            result = await self._invoke_map(batch.chunks)
+            map_results.append(result)
+
+            logger.info(
+                "Map batch %d/%d completed: "
+                "input_tokens=%d, duration=%.2fs",
+                index,
+                len(batches),
+                batch.estimated_tokens,
+                time.perf_counter() - batch_start,
+            )
+
+        logger.info(
+            "Map stage completed: batches=%d, duration=%.2fs",
+            len(batches),
+            time.perf_counter() - map_start,
+        )
+
+        # Step 3: REDUCE.
+        reduce_start = time.perf_counter()
+
         reduced_summaries = await self._recursive_reduce(map_results)
 
-        # Step 4: Generate final document summary
+        logger.info(
+            "Reduce stage completed: "
+            "initial_summaries=%d, final_summaries=%d, duration=%.2fs",
+            len(map_results),
+            len(reduced_summaries),
+            time.perf_counter() - reduce_start,
+        )
+
+        # Step 4: FINAL.
+        final_input = "\n\n".join(reduced_summaries)
+
+        final_messages = self.final_prompt.format_messages(
+            summaries=final_input,
+        )
+
+        final_input_tokens = self.token_counter.count_messages(
+            final_messages
+        )
+
+        if final_input_tokens > self.FINAL_INPUT_TOKEN_BUDGET:
+            raise ValueError(
+                "FINAL prompt exceeds token budget: "
+                f"{final_input_tokens} > {self.FINAL_INPUT_TOKEN_BUDGET}"
+            )
+
+        final_start = time.perf_counter()
+
         result = await self.final_chain.ainvoke({
-            "summaries": "\n\n".join(reduced_summaries),
+            "summaries": final_input,
         })
 
-        return self._extract_text(result.content)
+        summary = self._extract_text(result.content)
 
-    def _group_chunks(
-            self,
-            chunks: Sequence[DocumentChunk],
-    ) -> list[list[DocumentChunk]]:
+        if not summary:
+            raise ValueError("FINAL model returned an empty summary.")
 
-        batches: list[list[DocumentChunk]] = []
-        current_batch: list[DocumentChunk] = []
-        current_size = 0
+        logger.info(
+            "Final summary generated: "
+            "input_tokens=%d, output_tokens=%d, duration=%.2fs",
+            final_input_tokens,
+            self.token_counter.count(summary),
+            time.perf_counter() - final_start,
+        )
 
-        for chunk in chunks:
-            chunk_size = len(chunk.content)
+        logger.info(
+            "Document summarization completed: total_duration=%.2fs",
+            time.perf_counter() - start_time,
+        )
 
-            if (
-                    current_batch
-                    and current_size + chunk_size > self.MAP_BATCH_CHARS
-            ):
-                batches.append(current_batch)
-                current_batch = []
-                current_size = 0
+        return summary
 
-            current_batch.append(chunk)
-            current_size += chunk_size
+    async def _invoke_map(self, chunks: Sequence) -> str:
+        messages = self.map_prompt.format_messages(
+            text=format_chunk_sections(chunks),
+        )
 
-        if current_batch:
-            batches.append(current_batch)
+        estimated_tokens = self.token_counter.count_messages(messages)
 
-        return batches
-
-    async def _invoke_map(
-            self,
-            chunks: Sequence[DocumentChunk],
-    ) -> str:
-
-        sections = []
-
-        for chunk in chunks:
-            page_info = (
-                f", page {chunk.page_number}"
-                if chunk.page_number is not None
-                else ""
+        if estimated_tokens > self.MAP_INPUT_TOKEN_BUDGET:
+            raise ValueError(
+                "MAP prompt exceeds token budget: "
+                f"{estimated_tokens} > {self.MAP_INPUT_TOKEN_BUDGET}"
             )
 
-            sections.append(
-                f"[Chunk {chunk.chunk_index}{page_info}]\n"
-                f"{chunk.content}"
-            )
-
-        async with self.semaphore:
-            result = await self.map_chain.ainvoke({
-                "text": "\n\n".join(sections),
-            })
+        result = await self.model.ainvoke(messages)
 
         return self._extract_text(result.content)
 
@@ -200,84 +246,265 @@ class DocumentSummarizationAgent:
             summaries: list[str],
     ) -> list[str]:
 
-        current = summaries
+        if not summaries:
+            raise ValueError("Cannot reduce an empty list of summaries.")
 
-        while self._total_chars(current) > self.FINAL_INPUT_CHARS:
+        current = self._prepare_summaries_for_reduction(summaries)
+        round_number = 0
 
-            batches = self._group_texts(
+        while self._estimate_prompt_tokens(
+                self.final_prompt,
+                summaries="\n\n".join(current),
+        ) > self.FINAL_INPUT_TOKEN_BUDGET:
+
+            round_number += 1
+            round_start = time.perf_counter()
+
+            batches = self._group_texts_by_tokens(
                 current,
-                self.REDUCE_BATCH_CHARS,
+                self.REDUCE_INPUT_TOKEN_BUDGET,
             )
 
-            # Every batch must contain at least two summaries.
-            # Otherwise, this reduction round cannot make progress.
-            if any(len(batch) < 2 for batch in batches):
+            logger.info(
+                "Reduction round %d started: "
+                "summaries=%d, input_tokens=%d, batches=%d",
+                round_number,
+                len(current),
+                self._total_tokens(current),
+                len(batches),
+            )
+
+            if not any(len(batch) >= 2 for batch in batches):
                 raise ValueError(
                     "Unable to reduce summaries within the configured "
-                    "input size. Consider increasing REDUCE_BATCH_CHARS."
+                    "token budget. No batch contains multiple summaries."
                 )
 
-            reduced = await asyncio.gather(
-                *[
-                    self._invoke_reduce(batch)
-                    for batch in batches
-                ]
-            )
+            reduced = []
+
+            for batch in batches:
+                if len(batch) == 1:
+                    reduced.append(batch[0])
+                else:
+                    result = await self._invoke_reduce(batch)
+                    reduced.append(result)
 
             if len(reduced) >= len(current):
                 raise RuntimeError(
                     "Recursive summarization did not reduce "
-                    "the number of summaries"
+                    "the number of summaries."
                 )
 
-            current = reduced
+            current = self._prepare_summaries_for_reduction(reduced)
+
+            logger.info(
+                "Reduction round %d completed: "
+                "output_summaries=%d, output_tokens=%d, duration=%.2fs",
+                round_number,
+                len(current),
+                self._total_tokens(current),
+                time.perf_counter() - round_start,
+            )
 
         return current
 
-    async def _invoke_reduce(
+    def _group_texts_by_tokens(
             self,
-            summaries: Sequence[str],
-    ) -> str:
-
-        async with self.semaphore:
-            result = await self.reduce_chain.ainvoke({
-                "summaries": "\n\n".join(summaries),
-            })
-
-        return self._extract_text(result.content)
-
-    @staticmethod
-    def _group_texts(
             texts: Sequence[str],
-            max_chars: int,
+            max_tokens: int,
     ) -> list[list[str]]:
 
         batches: list[list[str]] = []
         current_batch: list[str] = []
-        current_size = 0
 
         for text in texts:
-            text_size = len(text)
+            candidate_batch = [*current_batch, text]
 
-            if (
-                    current_batch
-                    and current_size + text_size > max_chars
-            ):
+            candidate_input = "\n\n".join(candidate_batch)
+
+            candidate_tokens = self._estimate_prompt_tokens(
+                self.reduce_prompt,
+                summaries=candidate_input,
+            )
+
+            if candidate_tokens > max_tokens:
+                if not current_batch:
+                    raise ValueError(
+                        "A single summary exceeds the REDUCE prompt "
+                        f"budget ({candidate_tokens} > {max_tokens})."
+                    )
+
                 batches.append(current_batch)
-                current_batch = []
-                current_size = 0
+                current_batch = [text]
 
-            current_batch.append(text)
-            current_size += text_size
+                single_input = text
+
+                single_tokens = self._estimate_prompt_tokens(
+                    self.reduce_prompt,
+                    summaries=single_input,
+                )
+
+                if single_tokens > max_tokens:
+                    raise ValueError(
+                        "A single summary exceeds the REDUCE prompt "
+                        f"budget ({single_tokens} > {max_tokens})."
+                    )
+            else:
+                current_batch = candidate_batch
 
         if current_batch:
             batches.append(current_batch)
 
         return batches
 
-    @staticmethod
-    def _total_chars(texts: Sequence[str]) -> int:
-        return sum(len(text) for text in texts)
+    def _total_tokens(self, texts: Sequence[str]) -> int:
+        return sum(
+            self.token_counter.count(text)
+            for text in texts
+        )
+
+    async def _invoke_reduce(
+            self,
+            summaries: Sequence[str],
+    ) -> str:
+
+        input_text = "\n\n".join(summaries)
+
+        messages = self.reduce_prompt.format_messages(
+            summaries=input_text,
+        )
+
+        input_tokens = self.token_counter.count_messages(messages)
+
+        if input_tokens > self.REDUCE_INPUT_TOKEN_BUDGET:
+            raise ValueError(
+                "REDUCE prompt exceeds token budget: "
+                f"{input_tokens} > {self.REDUCE_INPUT_TOKEN_BUDGET}"
+            )
+
+        start_time = time.perf_counter()
+
+        result = await self.reduce_chain.ainvoke({
+            "summaries": input_text,
+        })
+
+        output = self._extract_text(result.content)
+
+        if not output:
+            raise ValueError("REDUCE model returned an empty summary.")
+
+        logger.info(
+            "Reduce batch completed: "
+            "input_tokens=%d, output_tokens=%d, duration=%.2fs",
+            input_tokens,
+            self.token_counter.count(output),
+            time.perf_counter() - start_time,
+        )
+
+        return output
+
+    def _estimate_prompt_tokens(
+            self,
+            prompt: ChatPromptTemplate,
+            **kwargs,
+    ) -> int:
+        messages = prompt.format_messages(**kwargs)
+
+        return self.token_counter.count_messages(messages)
+
+    def _split_summary_to_fit_budgets(
+            self,
+            summary: str,
+    ) -> list[str]:
+
+        reduce_empty_tokens = self._estimate_prompt_tokens(
+            self.reduce_prompt,
+            summaries="",
+        )
+
+        final_empty_tokens = self._estimate_prompt_tokens(
+            self.final_prompt,
+            summaries="",
+        )
+
+        content_budget = min(
+            self.REDUCE_INPUT_TOKEN_BUDGET - reduce_empty_tokens,
+            self.FINAL_INPUT_TOKEN_BUDGET - final_empty_tokens,
+        )
+
+        if content_budget <= 0:
+            raise ValueError(
+                "REDUCE or FINAL token budget is too small "
+                "to accommodate its prompt."
+            )
+
+        while content_budget > 0:
+            segments = self.token_counter.split_text(
+                summary,
+                content_budget,
+            )
+
+            largest_overage = 0
+
+            for segment in segments:
+                reduce_tokens = self._estimate_prompt_tokens(
+                    self.reduce_prompt,
+                    summaries=segment,
+                )
+
+                final_tokens = self._estimate_prompt_tokens(
+                    self.final_prompt,
+                    summaries=segment,
+                )
+
+                largest_overage = max(
+                    largest_overage,
+                    reduce_tokens - self.REDUCE_INPUT_TOKEN_BUDGET,
+                    final_tokens - self.FINAL_INPUT_TOKEN_BUDGET,
+                )
+
+            if largest_overage <= 0:
+                return segments
+
+            content_budget -= max(largest_overage, 8)
+
+        raise ValueError(
+            "Unable to split an intermediate summary "
+            "within both REDUCE and FINAL token budgets."
+        )
+
+    def _prepare_summaries_for_reduction(
+            self,
+            summaries: Sequence[str],
+    ) -> list[str]:
+
+        prepared = []
+
+        if any(not summary.strip() for summary in summaries):
+            raise ValueError("Intermediate summaries must not be empty.")
+
+        for summary in summaries:
+            reduce_tokens = self._estimate_prompt_tokens(
+                self.reduce_prompt,
+                summaries=summary,
+            )
+
+            final_tokens = self._estimate_prompt_tokens(
+                self.final_prompt,
+                summaries=summary,
+            )
+
+            if (
+                    reduce_tokens > self.REDUCE_INPUT_TOKEN_BUDGET
+                    or final_tokens > self.FINAL_INPUT_TOKEN_BUDGET
+            ):
+                prepared.extend(
+                    self._split_summary_to_fit_budgets(summary)
+                )
+            else:
+                prepared.append(summary)
+
+        return prepared
 
     @staticmethod
     def _extract_text(content: Any) -> str:

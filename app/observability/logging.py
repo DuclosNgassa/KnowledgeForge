@@ -6,6 +6,9 @@ logger.setLevel(logging.INFO)
 
 
 def setup_logging():
+    if logger.handlers:
+        return
+
     handler = logging.StreamHandler(sys.stdout)
 
     formatter = logging.Formatter(
@@ -15,5 +18,4 @@ def setup_logging():
     handler.setFormatter(formatter)
 
     logger.addHandler(handler)
-
     logger.propagate = False

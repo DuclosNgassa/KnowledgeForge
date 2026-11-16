@@ -709,6 +709,24 @@ Generate Answer
 -   Context management
 -   Query rewriting
 
+#### Start all workers
+
+```
+uv run taskiq worker --app-dir . --workers 1 app.workers.worker:broker
+```
+
+```
+uv run taskiq worker app.workers.broker:broker app.workers.worker
+uv run taskiq worker app.workers.broker:broker app.workers.worker --workers 1
+```
+
+This tells Taskiq to:
+
+1. Load the broker from app.workers.broker.
+2. Import app.workers.worker.
+3. Register all imported tasks.
+4. Start consuming jobs.
+
 #### Start the Taskiq worker
 
 ```

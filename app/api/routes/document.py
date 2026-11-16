@@ -11,6 +11,7 @@ from app.dependencies import get_current_user_info, get_document_uploader, get_i
 from app.ingestion.ingestion_service import IngestionService
 from app.models.enums import DocumentStatus
 from app.observability.logging import logger
+from app.repositories.document_summary_repository import DocumentSummaryRepository
 from app.schemas.document import DocumentUrlRequest, UpdateDocumentKnowledgeBaseRequest, UpdateDocumentMetadataRequest
 from app.schemas.document_extraction import DocumentExtractionResponse
 from app.schemas.document_response import DocumentResponse, DocumentListResponse, DocumentSummaryResponse
@@ -173,27 +174,51 @@ async def upload_from_url(
     )
 
 
+
 @router.post("/{document_id}/summary")
 async def request_document_summary(
         document_id: UUID,
         regenerate: bool = False,
         db: AsyncSession = Depends(get_db),
         current_user_info: dict = Depends(get_current_user_info),
-        document_summary_service: DocumentSummaryService = Depends(get_document_summary_service),
+        document_summary_service: DocumentSummaryService = Depends(
+            get_document_summary_service
+        ),
 ):
     summary, should_schedule = await document_summary_service.request_summary(
         document_id=document_id,
         user_id=current_user_info["user_id"],
         regenerate=regenerate,
     )
-    # Ensure the summary record exists before dispatching.
+
     if should_schedule:
         await db.commit()
 
-        await generate_document_summary.kiq(
-            document_id_str=str(document_id),
-            generation_id_str=str(summary.generation_id)
-        )
+        try:
+            await generate_document_summary.kiq(
+                document_id_str=str(document_id),
+                generation_id_str=str(summary.generation_id),
+            )
+
+        except Exception as exc:
+            logger.exception(
+                "Failed to dispatch document summary task. "
+                "[document_id=%s, generation_id=%s]",
+                document_id,
+                summary.generation_id,
+            )
+
+            summary_repository = DocumentSummaryRepository(db)
+
+            await summary_repository.set_dispatch_failed(
+                document_id=document_id,
+                generation_id=summary.generation_id,
+                error_message=f"Task dispatch failed: {str(exc)[:3900]}",
+            )
+
+            await db.commit()
+
+            raise
 
     return summary
 

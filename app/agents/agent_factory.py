@@ -15,9 +15,11 @@ def create_document_extraction_agent() -> DocumentExtractionAgent:
     return DocumentExtractionAgent(model=model)
 
 def create_document_summarization_agent() -> DocumentSummarizationAgent:
+
     model = init_chat_model(
         settings.openai_chat_model,
         temperature=0,
+        max_retries=5,
     )
 
     return DocumentSummarizationAgent(model=model)

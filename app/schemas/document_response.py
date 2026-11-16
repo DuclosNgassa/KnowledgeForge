@@ -34,7 +34,7 @@ class DocumentListResponse(BaseModel):
 class DocumentSummaryResponse(BaseModel):
     id: UUID
     document_id: UUID
-    content: str
+    content: str | None = None
     status: SummaryStatus
     error_message: str | None
     created_at: datetime

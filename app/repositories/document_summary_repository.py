@@ -83,7 +83,7 @@ class DocumentSummaryRepository:
 
         result = await self.db.execute(stmt)
         updated = result.scalar_one_or_none() is not None
-        logger.info(f"result.scalar_one_or_none() is not None: {updated}")
+
         return updated
 
     async def set_failed(
@@ -98,16 +98,19 @@ class DocumentSummaryRepository:
                 DocumentSummary.document_id == document_id,
                 DocumentSummary.generation_id == generation_id,
                 DocumentSummary.status == SummaryStatus.PROCESSING,
-            ).values(
+            )
+            .values(
                 status=SummaryStatus.FAILED,
                 error_message=error_message,
                 updated_at=datetime.now(timezone.utc),
             )
+            .returning(DocumentSummary.id)
         )
 
         result = await self.db.execute(stmt)
 
-        return result.rowcount == 1
+        return result.scalar_one_or_none() is not None
+
 
     async def claim_for_processing(
             self,
@@ -135,3 +138,28 @@ class DocumentSummaryRepository:
         result = await self.db.execute(stmt)
 
         return result.scalar_one_or_none()
+
+    async def set_dispatch_failed(
+            self,
+            document_id: UUID,
+            generation_id: UUID,
+            error_message: str,
+    ) -> bool:
+        stmt = (
+            update(DocumentSummary)
+            .where(
+                DocumentSummary.document_id == document_id,
+                DocumentSummary.generation_id == generation_id,
+                DocumentSummary.status == SummaryStatus.PENDING,
+            )
+            .values(
+                status=SummaryStatus.FAILED,
+                error_message=error_message,
+                updated_at=datetime.now(timezone.utc),
+            )
+            .returning(DocumentSummary.id)
+        )
+
+        result = await self.db.execute(stmt)
+
+        return result.scalar_one_or_none() is not None
