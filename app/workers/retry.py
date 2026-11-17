@@ -1,6 +1,6 @@
 import openai
 
-from app.core.exceptions.exceptions import TransientEmbeddingError, TransientSummaryError
+from app.core.exceptions.exceptions import TransientEmbeddingError, TransientSummaryError, TransientExtractionError
 
 TRANSIENT_API_EXCEPTIONS = (
     openai.RateLimitError,
@@ -13,4 +13,5 @@ RETRYABLE_EXCEPTIONS = (
     *TRANSIENT_API_EXCEPTIONS,
     TransientEmbeddingError,
     TransientSummaryError,
+    TransientExtractionError,
 )

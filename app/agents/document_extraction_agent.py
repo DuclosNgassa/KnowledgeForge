@@ -32,9 +32,11 @@ class DocumentExtractionAgent:
 
         batches = self._create_batches(chunks)
 
-        partial_results = await asyncio.gather(
-            *[self._extract_batch(batch) for batch in batches]
-        )
+        partial_results = []
+
+        for batch in batches:
+            result = await self._extract_batch(batch)
+            partial_results.append(result)
 
         return await self._reduce_results(partial_results)
 
@@ -118,9 +120,13 @@ class DocumentExtractionAgent:
                 for i in range(0, len(current_results), self.reduce_group_size)
             ]
 
-            current_results = await asyncio.gather(
-                *[self._merge_group(group) for group in groups]
-            )
+            merged_results = []
+
+            for group in groups:
+                result = await self._merge_group(group)
+                merged_results.append(result)
+
+            current_results = merged_results
 
         return current_results[0]
 

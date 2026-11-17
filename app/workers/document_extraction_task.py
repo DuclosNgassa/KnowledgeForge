@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 
 from app.agents.agent_factory import create_document_extraction_agent
@@ -13,12 +14,35 @@ from app.workers.broker import broker
 
 document_extraction_agent = create_document_extraction_agent()
 
+_extraction_semaphore = asyncio.Semaphore(1)
+
 
 @broker.task(
     retry_on_error=True,
     max_retries=3,
 )
 async def extract_document(
+        document_id_str: str,
+        generation_id_str: str,
+) -> None:
+    await _run_extraction_with_semaphore(
+        document_id_str=document_id_str,
+        generation_id_str=generation_id_str,
+    )
+
+
+async def _run_extraction_with_semaphore(
+        document_id_str: str,
+        generation_id_str: str,
+) -> None:
+    async with _extraction_semaphore:
+        await _extract_document(
+            document_id_str=document_id_str,
+            generation_id_str=generation_id_str,
+        )
+
+
+async def _extract_document(
         document_id_str: str,
         generation_id_str: str,
 ) -> None:

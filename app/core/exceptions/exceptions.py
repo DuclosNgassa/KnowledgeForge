@@ -13,6 +13,10 @@ class PermanentEmbeddingError(EmbeddingError):
 class TransientSummaryError(Exception):
     """Summarization failed temporarily and can be retried."""
 
+
+class TransientExtractionError(Exception):
+    """Structured extraction failed temporarily and can be retried."""
+
 class AppException(Exception):
     """App exception."""
     status_code = 500
