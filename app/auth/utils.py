@@ -1,4 +1,3 @@
-import logging
 import uuid
 from datetime import datetime, timedelta
 
@@ -6,6 +5,7 @@ import jwt
 from pwdlib import PasswordHash
 
 from app.core.settings import settings
+from app.observability import logging
 
 password_hash = PasswordHash.recommended()
 

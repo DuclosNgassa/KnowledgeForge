@@ -3,24 +3,29 @@ from uuid import UUID
 
 from fastapi import APIRouter, UploadFile, File, Request, status, Query, HTTPException
 from fastapi.params import Depends
+from psycopg.pq import error_message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db.database import get_db
 from app.dependencies import get_current_user_info, get_document_uploader, get_ingestion_service, get_document_service, \
-    get_document_summary_service, get_document_extraction_service
+    get_document_summary_service, get_document_extraction_service, get_document_comparison_orchestration_service
 from app.ingestion.ingestion_service import IngestionService
 from app.models.enums import DocumentStatus
 from app.observability.logging import logger
 from app.repositories.document_summary_repository import DocumentSummaryRepository
 from app.schemas.document import DocumentUrlRequest, UpdateDocumentKnowledgeBaseRequest, UpdateDocumentMetadataRequest
+from app.schemas.document_comparison import CreateDocumentComparisonRequest, CreateDocumentComparisonResponse, \
+    PrerequisiteDispatch, DocumentComparisonDetailResponse
 from app.schemas.document_extraction import DocumentExtractionResponse
 from app.schemas.document_response import DocumentResponse, DocumentListResponse, DocumentSummaryResponse
+from app.services.document_comparison_orchestration_service import DocumentComparisonOrchestrationService
 from app.services.document_extraction_service import DocumentExtractionService
 from app.services.document_service import DocumentService
 from app.services.document_summary_service import DocumentSummaryService
 from app.services.document_uploader import DocumentUploader, upload_and_save_document
 from app.workers.document_summary_task import generate_document_summary
 from app.workers.document_extraction_task import extract_document
+from app.workers.document_comparison_task import coordinate_document_comparisons
 
 router = APIRouter(
     prefix="/documents",
@@ -174,7 +179,6 @@ async def upload_from_url(
     )
 
 
-
 @router.post("/{document_id}/summary")
 async def request_document_summary(
         document_id: UUID,
@@ -208,9 +212,7 @@ async def request_document_summary(
                 summary.generation_id,
             )
 
-            summary_repository = DocumentSummaryRepository(db)
-
-            await summary_repository.set_dispatch_failed(
+            await document_summary_service.set_dispatch_failed(
                 document_id=document_id,
                 generation_id=summary.generation_id,
                 error_message=f"Task dispatch failed: {str(exc)[:3900]}",
@@ -278,6 +280,7 @@ async def request_document_extraction(
             await document_extraction_service.set_dispatch_failed(
                 document_id=document_id,
                 generation_id=extraction.generation_id,
+                error_message=f"Failed to enqueue extraction task generation_id={extraction.generation_id}."
             )
             await db.commit()
 
@@ -310,6 +313,190 @@ async def get_document_extraction(
     )
 
     return extraction
+
+
+@router.post(
+    "/document-comparisons",
+    response_model=CreateDocumentComparisonResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def create_document_comparison(
+        request: CreateDocumentComparisonRequest,
+        db: AsyncSession = Depends(get_db),
+        current_user: dict = Depends(get_current_user_info),
+        service: DocumentComparisonOrchestrationService = Depends(
+            get_document_comparison_orchestration_service
+        ),
+):
+    comparison, prerequisite_dispatches = await service.create_comparison(
+        request=request,
+        user_id=current_user["user_id"],
+    )
+
+    # Persist comparison and prerequisite generation records first.
+    await db.commit()
+
+    prerequisites_dispatched = await dispatch_comparison_prerequisites(
+        dispatches=prerequisite_dispatches,
+        comparison_id=comparison.id,
+        generation_id=comparison.generation_id,
+        service=service,
+        db=db,
+    )
+
+    if prerequisites_dispatched:
+        try:
+            # Also handles the case where no prerequisites needed dispatching.
+            await coordinate_document_comparisons.kiq(
+                document_id_str=str(request.document_ids[0]),
+            )
+
+        except Exception as exc:
+            error_message = (
+                "Failed to enqueue comparison coordinator | "
+                f"comparison_id={comparison.id}."
+            )
+
+            logger.exception(error_message)
+
+            await service.set_dispatch_failed(
+                comparison_id=comparison.id,
+                generation_id=comparison.generation_id,
+                error_message=str(exc)[:4000],
+            )
+            await db.commit()
+
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Could not schedule document comparison.",
+            ) from exc
+
+    actual_comparison = await service.comparison_repository.find_by_id(
+        comparison_id=comparison.id,
+        user_id=current_user["user_id"],
+    )
+
+    response = CreateDocumentComparisonResponse(
+        id=actual_comparison.id,
+        title=actual_comparison.title,
+        status=actual_comparison.status,
+        document_ids=[
+            item.document_id
+            for item in actual_comparison.items
+        ],
+        criteria=actual_comparison.criteria,
+        created_at=actual_comparison.created_at,
+    )
+
+    return response
+
+
+@router.get(
+    "/document-comparisons/{comparison_id}",
+    response_model=DocumentComparisonDetailResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_document_comparison(
+        comparison_id: UUID,
+        db: AsyncSession = Depends(get_db),
+        current_user: dict = Depends(get_current_user_info),
+        service: DocumentComparisonOrchestrationService = Depends(
+            get_document_comparison_orchestration_service
+        ),
+) -> DocumentComparisonDetailResponse:
+    comparison = await service.get_comparison(
+        comparison_id=comparison_id,
+        user_id=current_user["user_id"],
+    )
+
+    if comparison is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Document comparison not found.",
+        )
+
+    return DocumentComparisonDetailResponse(
+        id=comparison.id,
+        title=comparison.title,
+        status=comparison.status,
+        document_ids=[
+            item.document_id for item in comparison.items
+        ],
+        criteria=comparison.criteria,
+        overview=comparison.overview,
+        criterion_results=(
+            comparison.result.get("criterion_results", [])
+            if comparison.result
+            else None
+        ),
+        conclusion=comparison.conclusion,
+        error_message=comparison.error_message,
+        created_at=comparison.created_at,
+        updated_at=comparison.updated_at,
+    )
+
+
+async def dispatch_comparison_prerequisites(
+        dispatches: list[PrerequisiteDispatch],
+        comparison_id: UUID,
+        generation_id: UUID,
+        service: DocumentComparisonOrchestrationService,
+        db: AsyncSession,
+) -> bool:
+    dispatch_errors = []
+
+    for dispatch in dispatches:
+        if dispatch.summary_generation_id:
+            try:
+                await generate_document_summary.kiq(
+                    str(dispatch.document_id),
+                    str(dispatch.summary_generation_id),
+                )
+            except Exception as exc:
+                error_message = (
+                    f"Failed to enqueue document summary | "
+                    f"document_id={dispatch.document_id}: {str(exc)}"
+                )
+                dispatch_errors.append(error_message)
+                logger.exception(error_message)
+
+                await service.summary_service.set_dispatch_failed(
+                    document_id=dispatch.document_id,
+                    generation_id=dispatch.summary_generation_id,
+                    error_message=str(exc)[:4000],
+                )
+
+        if dispatch.extraction_generation_id:
+            try:
+                await extract_document.kiq(
+                    str(dispatch.document_id),
+                    str(dispatch.extraction_generation_id),
+                )
+            except Exception as exc:
+                error_message = (
+                    f"Failed to enqueue document extraction | "
+                    f"document_id={dispatch.document_id}: {str(exc)}"
+                )
+                dispatch_errors.append(error_message)
+                logger.exception(error_message)
+
+                await service.extraction_service.set_dispatch_failed(
+                    document_id=dispatch.document_id,
+                    generation_id=dispatch.extraction_generation_id,
+                    error_message=str(exc)[:4000],
+                )
+
+    if dispatch_errors:
+        await service.set_dispatch_failed(
+            comparison_id=comparison_id,
+            generation_id=generation_id,
+            error_message="\n".join(dispatch_errors)[:4000],
+        )
+
+        await db.commit()
+        return False
+
+    return True
 
 
 @router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import DocumentSummary
 from app.models.enums import SummaryStatus
-from app.observability.logging import logger
 
 
 class DocumentSummaryRepository:
@@ -163,3 +162,17 @@ class DocumentSummaryRepository:
         result = await self.db.execute(stmt)
 
         return result.scalar_one_or_none() is not None
+
+    async def find_completed_document_ids(
+            self,
+            document_ids: list[UUID],
+    ) -> set[UUID]:
+        result = await self.db.execute(
+            select(DocumentSummary.document_id)
+            .where(
+                DocumentSummary.document_id.in_(document_ids),
+                DocumentSummary.status == SummaryStatus.COMPLETED,
+            )
+        )
+
+        return set(result.scalars().all())

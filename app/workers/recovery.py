@@ -2,7 +2,7 @@ from app.core.db.database import AsyncSessionLocal
 from app.observability.logging import logger
 from app.repositories.document_chunk_repository import DocumentChunkRepository
 from app.workers.broker import broker
-from app.workers.tasks import embed_document
+from app.workers.document_embedding_task import embed_document
 
 
 @broker.task

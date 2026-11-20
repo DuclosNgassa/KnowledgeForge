@@ -10,7 +10,7 @@ from app.models import Document, DocumentChunk
 from app.observability.logging import logger
 from app.schemas.document_chunk import DocumentChunkData
 from app.services.document_service import DocumentService
-from app.workers.tasks import embed_document
+from app.workers.document_embedding_task import embed_document
 
 
 class IngestionService:

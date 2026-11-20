@@ -1,11 +1,12 @@
+from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import select, update, func
+from sqlalchemy import select, update, func, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.enums import DocumentStatus
-from app.models import Document
+from app.models.enums import DocumentStatus, EmbeddingStatus
+from app.models import Document, DocumentChunk
 
 
 class DocumentRepository:
@@ -100,13 +101,29 @@ class DocumentRepository:
 
         return result.scalar_one_or_none()
 
-    async def set_document_to_ready(self, document_id: UUID):
-        print("set_document_to_ready: ", document_id)
-        await self.db.execute(
+    async def set_document_to_ready(self, document_id: UUID) -> bool:
+        statement = (
             update(Document)
-            .where(Document.id == document_id)
-            .values(status=DocumentStatus.READY)
+            .where(
+                Document.id == document_id,
+                ~exists(
+                    select(DocumentChunk.id).where(
+                        DocumentChunk.document_id == document_id,
+                        DocumentChunk.embedding_status
+                        != EmbeddingStatus.COMPLETED,
+                    )
+                ),
+            )
+            .values(
+                status=DocumentStatus.READY,
+                updated_at=datetime.now(timezone.utc),
+            )
+            .returning(Document.id)
         )
+
+        result = await self.db.execute(statement)
+        return result.scalar_one_or_none() is not None
+
 
     async def update_knowledge_base(self, document: Document, knowledge_base_id: UUID) -> Document:
         document.knowledge_base_id = knowledge_base_id
@@ -164,6 +181,20 @@ class DocumentRepository:
 
         return documents, total
 
+    async def find_owned_document_ids(
+            self,
+            document_ids: list[UUID],
+            user_id: UUID,
+    ) -> set[UUID]:
+        statement = select(Document.id).where(
+            Document.id.in_(document_ids),
+            Document.user_id == user_id,
+        )
+
+        result = await self.db.execute(statement)
+
+        return set(result.scalars().all())
+
     async def update_metadata(
             self,
             document: Document,
@@ -184,3 +215,23 @@ class DocumentRepository:
     async def delete(self, document: Document) -> None:
         await self.db.delete(document)
         await self.db.flush()
+
+    async def set_document_to_embedding_failed(
+            self,
+            document_id: UUID,
+    ) -> bool:
+        statement = (
+            update(Document)
+            .where(
+                Document.id == document_id,
+                Document.status == DocumentStatus.PROCESSING,
+            )
+            .values(
+                status=DocumentStatus.EMBEDDING_FAILED,
+                updated_at=datetime.now(timezone.utc),
+            )
+            .returning(Document.id)
+        )
+
+        result = await self.db.execute(statement)
+        return result.scalar_one_or_none() is not None

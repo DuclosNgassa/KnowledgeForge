@@ -42,6 +42,12 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    document_comparisons: Mapped[list["DocumentComparison"]] = relationship(
+        "DocumentComparison",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

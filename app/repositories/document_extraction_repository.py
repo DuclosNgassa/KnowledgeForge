@@ -156,3 +156,16 @@ class DocumentExtractionRepository:
 
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none() is not None
+
+    async def find_completed_document_ids(
+            self,
+            document_ids: list[UUID],
+    ) -> set[UUID]:
+        result = await self.db.execute(
+            select(DocumentExtraction.document_id).where(
+                DocumentExtraction.document_id.in_(document_ids),
+                DocumentExtraction.status == ExtractionStatus.COMPLETED,
+            )
+        )
+
+        return set(result.scalars().all())

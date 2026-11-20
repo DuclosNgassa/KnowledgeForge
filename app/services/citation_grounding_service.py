@@ -1,5 +1,3 @@
-import logging
-
 from langchain.chat_models import init_chat_model
 
 from app.services.citation_service import CitationService, CitationRegistry

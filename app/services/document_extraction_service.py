@@ -2,6 +2,7 @@ from uuid import UUID, uuid4
 
 from app.core.exceptions.exceptions import NotFoundException
 from app.models.document_extraction import DocumentExtraction
+from app.models.enums import ExtractionStatus
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.document_extraction_repository import (
     DocumentExtractionRepository,
@@ -57,7 +58,7 @@ class DocumentExtractionService:
             return extraction, should_schedule
 
         # Request a new extraction generation.
-        if regenerate:
+        if regenerate or extraction.status == ExtractionStatus.FAILED:
             extraction = await self.document_extraction_repository.set_pending(
                 document_extraction=extraction,
                 generation_id=generation_id,
@@ -104,9 +105,10 @@ class DocumentExtractionService:
             self,
             document_id: UUID,
             generation_id: UUID,
-    ):
-        await self.document_extraction_repository.set_dispatch_failed(
+            error_message: str
+    ) -> bool:
+        return await self.document_extraction_repository.set_dispatch_failed(
             document_id=document_id,
             generation_id=generation_id,
-            error_message="Failed to enqueue extraction task.",
+            error_message=error_message,
         )

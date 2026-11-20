@@ -23,6 +23,7 @@ class DocumentSummaryService:
             user_id: UUID,
             regenerate: bool = False,
     ) -> tuple[DocumentSummary, bool]:
+        should_schedule = True
 
         document = await self.document_repository.find_document_by_id(
             document_id=document_id,
@@ -48,16 +49,17 @@ class DocumentSummaryService:
                 document_id=document_id,
                 generation_id=generation_id,
             )
-            return summary, True
+            return summary, should_schedule
 
         if regenerate or summary.status == SummaryStatus.FAILED:
             summary = await self.document_summary_repository.set_pending(
                 document_summary=summary,
                 generation_id=generation_id,
             )
-            return summary, True
+            return summary, should_schedule
 
-        return summary, False
+        should_schedule = False
+        return summary, should_schedule
 
     async def get_summary(self, document_id: UUID, user_id: UUID) -> DocumentSummary:
 
@@ -71,3 +73,15 @@ class DocumentSummaryService:
             raise NotFoundException(f"Document with id {document_id} has not summary yet.")
 
         return document_summary
+
+    async def set_dispatch_failed(
+            self,
+            document_id,
+            generation_id,
+            error_message
+    ) -> bool:
+        return await self.document_summary_repository.set_dispatch_failed(
+            document_id=document_id,
+            generation_id=generation_id,
+            error_message=error_message,
+        )

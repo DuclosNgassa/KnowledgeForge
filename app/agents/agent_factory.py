@@ -1,3 +1,4 @@
+from app.agents.document_comparison_agent import DocumentComparisonAgent
 from app.agents.document_summarization_agent import (
     DocumentSummarizationAgent,
 )
@@ -27,3 +28,12 @@ def create_document_summarization_agent() -> DocumentSummarizationAgent:
     )
 
     return DocumentSummarizationAgent(model=model)
+
+
+def create_document_comparison_agent() -> DocumentComparisonAgent:
+    model = init_chat_model(
+        settings.openai_chat_model,
+        temperature=0,
+    )
+
+    return DocumentComparisonAgent(model=model)

@@ -25,6 +25,7 @@ from app.repositories.user_repository import UserRepository
 from app.services.agent_service import AgentService
 from app.services.chat_message_service import ChatMessageService
 from app.services.chat_session_service import ChatSessionService
+from app.services.document_comparison_orchestration_service import DocumentComparisonOrchestrationService
 from app.services.document_extraction_service import DocumentExtractionService
 from app.services.document_service import DocumentService
 from app.services.document_summary_service import DocumentSummaryService
@@ -199,4 +200,20 @@ def get_document_extraction_service(
     return DocumentExtractionService(
         document_repository=DocumentRepository(session),
         document_extraction_repository=DocumentExtractionRepository(session),
+    )
+
+
+def get_document_comparison_orchestration_service(
+        db: AsyncSession = Depends(get_db),
+        summary_service: DocumentSummaryService = Depends(
+            get_document_summary_service
+        ),
+        extraction_service: DocumentExtractionService = Depends(
+            get_document_extraction_service
+        ),
+) -> DocumentComparisonOrchestrationService:
+    return DocumentComparisonOrchestrationService(
+        db=db,
+        summary_service=summary_service,
+        extraction_service=extraction_service,
     )

@@ -50,3 +50,13 @@ For KnowledgeForge, I see five important use cases.
    Generate descriptions and overviews that help users understand and organize their knowledge base.
 5. Better question answering
    A summary can provide global context when a user asks questions that require understanding the entire document.
+
+Comparison:
+
+1. General document comparison.
+2. User-defined comparison criteria.
+3. Predefined comparison templates.
+4. Similarities and differences.
+5. Unique information and contradictions.
+6. Entity and technology comparison.
+

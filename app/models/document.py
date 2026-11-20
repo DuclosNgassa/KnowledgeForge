@@ -98,3 +98,11 @@ class Document(Base):
         uselist=False,
         passive_deletes=True,
     )
+
+    comparison_items: Mapped["DocumentComparisonItem | None"] = relationship(
+        "DocumentComparisonItem",
+        back_populates="document",
+        cascade="all, delete-orphan",
+        uselist=False,
+        passive_deletes=True,
+    )

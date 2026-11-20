@@ -6,6 +6,7 @@ from app.models.user import User
 from app.models.chat_session import ChatSession
 from app.models.chat_message import ChatMessage
 from app.models.document_extraction import DocumentExtraction
+from app.models.document_comparison import DocumentComparison, DocumentComparisonItem
 
 __all__ = [
     "User",
@@ -16,4 +17,6 @@ __all__ = [
     "ChatMessage",
     "DocumentSummary",
     "DocumentExtraction",
+    "DocumentComparison",
+    "DocumentComparisonItem",
 ]
